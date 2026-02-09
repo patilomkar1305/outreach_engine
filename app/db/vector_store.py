@@ -138,3 +138,98 @@ def upsert_persona(
         metadatas=[metadata or {}],
     )
     logger.info("Upserted persona for target_hash=%s", target_hash)
+
+
+# ---------------------------------------------------------------------------
+# Knowledge Base Functions
+# ---------------------------------------------------------------------------
+
+def _get_knowledge_collection() -> chromadb.Collection:
+    """Get (or create) the knowledge base collection."""
+    client = _get_chroma_client()
+    return client.get_or_create_collection(
+        name=f"{settings.chroma.collection}_knowledge",
+        metadata={"hnsw:space": "cosine"},
+    )
+
+
+def add_knowledge_document(
+    doc_id: str,
+    content: str,
+    metadata: dict[str, Any] | None = None,
+) -> None:
+    """
+    Add a document to the knowledge base for RAG queries.
+    
+    Used for:
+    - Company information documents
+    - Product descriptions
+    - Case studies
+    - Successful outreach examples
+    """
+    collection = _get_knowledge_collection()
+    embed = _get_embed_model().encode(content).tolist()
+    
+    collection.upsert(
+        ids=[doc_id],
+        embeddings=[embed],
+        documents=[content],
+        metadatas=[metadata or {}],
+    )
+    logger.info("Added knowledge document: %s", doc_id)
+
+
+def query_knowledge_base(
+    query: str,
+    top_k: int = 5,
+    filter_type: str | None = None,
+) -> list[dict[str, Any]]:
+    """
+    Query the knowledge base for relevant context.
+    
+    Returns relevant documents that can be used to enrich prompts
+    with company-specific information.
+    """
+    collection = _get_knowledge_collection()
+    
+    if collection.count() == 0:
+        logger.debug("Knowledge base is empty.")
+        return []
+    
+    embed = _get_embed_model().encode(query).tolist()
+    
+    where_filter = {"type": filter_type} if filter_type else None
+    
+    results = collection.query(
+        query_embeddings=[embed],
+        n_results=min(top_k, collection.count()),
+        include=["documents", "metadatas", "distances"],
+        where=where_filter,
+    )
+    
+    docs = results["documents"][0] if results["documents"] else []
+    metadatas = results["metadatas"][0] if results["metadatas"] else []
+    distances = results["distances"][0] if results["distances"] else []
+    
+    out: list[dict[str, Any]] = []
+    for doc, meta, dist in zip(docs, metadatas, distances):
+        out.append({
+            "content": doc,
+            "type": meta.get("type", "unknown"),
+            "title": meta.get("title", ""),
+            "similarity": round(1 - dist, 3),
+        })
+    return out
+
+
+def get_knowledge_stats() -> dict[str, Any]:
+    """Get statistics about the knowledge base."""
+    try:
+        collection = _get_knowledge_collection()
+        return {
+            "document_count": collection.count(),
+            "collection_name": collection.name,
+        }
+    except Exception as e:
+        logger.error(f"Failed to get knowledge stats: {e}")
+        return {"document_count": 0, "error": str(e)}

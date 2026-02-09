@@ -15,12 +15,13 @@ from __future__ import annotations
 import json
 import logging
 import re
+import time
 from typing import Any
 
 from langchain_ollama import OllamaLLM
 
 from app.config import settings
-from app.graph.state import OutreachState
+from app.graph.state import OutreachState, create_llm_action, add_llm_action, start_stage, complete_stage
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +62,7 @@ No markdown. No explanation outside the JSON.
   {{
     "channel": "<channel name>",
     "score": <0-10 float>,
-    "rationale": "<1 sentence>"
+    "rationale": "<1-2 sentences explaining the score>"
   }},
   ...
 ]
@@ -70,10 +71,14 @@ No markdown. No explanation outside the JSON.
 
 def scoring_node(state: OutreachState) -> OutreachState:
     logger.info("=== SCORING START ===")
+    
+    # Start stage tracking
+    state = start_stage(state, "scoring")
 
     drafts = state.get("drafts", [])
     if not drafts:
         logger.warning("No drafts to score.")
+        state = complete_stage(state, "scoring")
         return {**state, "status": "scored"}
 
     tone = state.get("tone", {})
@@ -94,10 +99,14 @@ def scoring_node(state: OutreachState) -> OutreachState:
 
     llm = _get_llm()
     logger.info("Calling Ollama for scoring …")
+    start_time = time.time()
     raw_output = llm.invoke(prompt)
+    duration_ms = int((time.time() - start_time) * 1000)
     logger.debug("Scoring raw output:\n%s", raw_output)
 
     # ── Parse JSON array ───────────────────────────────────────────
+    parse_status = "success"
+    parse_error = None
     try:
         cleaned = raw_output.strip()
         cleaned = re.sub(r"^```(?:json)?", "", cleaned)
@@ -109,7 +118,23 @@ def scoring_node(state: OutreachState) -> OutreachState:
         scores_list: list[dict[str, Any]] = json.loads(cleaned[start:end])
     except (ValueError, json.JSONDecodeError) as exc:
         logger.error("Score parsing failed: %s\nRaw: %s", exc, raw_output)
+        parse_status = "error"
+        parse_error = str(exc)
         scores_list = []
+
+    # ── Log LLM action ─────────────────────────────────────────────
+    llm_action = create_llm_action(
+        stage="scoring",
+        agent="scoring_agent",
+        action=f"Evaluating {len(drafts)} drafts for quality and personalization",
+        model=settings.ollama.model,
+        prompt=prompt,
+        response=raw_output,
+        duration_ms=duration_ms,
+        status=parse_status,
+        error_message=parse_error,
+    )
+    state = add_llm_action(state, llm_action)
 
     # ── Map scores back onto drafts by channel ────────────────────
     score_map: dict[str, dict[str, Any]] = {}
@@ -121,10 +146,17 @@ def scoring_node(state: OutreachState) -> OutreachState:
     for d in drafts:
         ch = d["channel"].lower()
         if ch in score_map:
-            d = {**d, "score": score_map[ch].get("score", 0)}
+            d = {
+                **d, 
+                "score": score_map[ch].get("score", 0),
+                "score_rationale": score_map[ch].get("rationale", "")
+            }
         updated_drafts.append(d)
 
     # Pretty-print scores for the user
     logger.info("Scores: %s", {d["channel"]: d.get("score") for d in updated_drafts})
 
+    # Complete stage tracking
+    state = complete_stage(state, "scoring")
+    
     return {**state, "drafts": updated_drafts, "status": "scored"}

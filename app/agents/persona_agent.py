@@ -20,13 +20,14 @@ from __future__ import annotations
 import json
 import logging
 import re
+import time
 from typing import Any
 
 from langchain_ollama import OllamaLLM
 
 from app.config import settings
 from app.db.vector_store import query_similar_personas
-from app.graph.state import OutreachState
+from app.graph.state import OutreachState, create_llm_action, add_llm_action, start_stage, complete_stage
 
 logger = logging.getLogger(__name__)
 
@@ -138,6 +139,9 @@ def _extract_json(raw: str) -> dict[str, Any]:
 
 def persona_node(state: OutreachState) -> OutreachState:
     logger.info("=== PERSONA ANALYSIS START ===")
+    
+    # Start stage tracking
+    state = start_stage(state, "persona")
 
     profile_text: str = state.get("raw_profile_text", "")
     if not profile_text:
@@ -159,14 +163,20 @@ def persona_node(state: OutreachState) -> OutreachState:
     llm = _get_llm()
 
     logger.info("Calling Ollama for persona analysis …")
+    start_time = time.time()
     raw_output: str = llm.invoke(prompt)
+    duration_ms = int((time.time() - start_time) * 1000)
     logger.debug("Raw LLM output:\n%s", raw_output)
 
     # ── 3. Parse JSON ────────────────────────────────────────────────
+    parse_status = "success"
+    parse_error = None
     try:
         tone_json = _extract_json(raw_output)
     except (ValueError, json.JSONDecodeError) as exc:
         logger.error("Failed to parse persona JSON: %s\nRaw: %s", exc, raw_output)
+        parse_status = "error"
+        parse_error = str(exc)
         # Fallback: store raw text as a single-field dict so pipeline doesn't crash
         tone_json = {
             "formality_level": "unknown",
@@ -177,7 +187,24 @@ def persona_node(state: OutreachState) -> OutreachState:
             "tone_keywords": [],
         }
 
-    # ── 4. Update state & DELETE ephemeral raw text ──────────────────
+    # ── 4. Log LLM action ────────────────────────────────────────────
+    llm_action = create_llm_action(
+        stage="persona",
+        agent="persona_agent",
+        action="Analyzing profile to extract communication style and persona",
+        model=settings.ollama.model,
+        prompt=prompt,
+        response=raw_output,
+        duration_ms=duration_ms,
+        status=parse_status,
+        error_message=parse_error,
+    )
+    state = add_llm_action(state, llm_action)
+
+    # ── 5. Update state & DELETE ephemeral raw text ──────────────────
+    # Complete stage tracking
+    state = complete_stage(state, "persona")
+    
     updated: OutreachState = {
         **state,
         "tone":              tone_json,

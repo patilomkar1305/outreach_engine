@@ -24,7 +24,7 @@ from urllib.parse import urlparse
 import requests
 from bs4 import BeautifulSoup
 
-from app.graph.state import OutreachState
+from app.graph.state import OutreachState, start_stage, complete_stage
 from app.utils.sanitizer import compute_target_hash
 
 logger = logging.getLogger(__name__)
@@ -182,6 +182,9 @@ def ingestion_node(state: OutreachState) -> OutreachState:
         raise ValueError("ingestion_node: raw_input is empty – nothing to ingest.")
 
     logger.info("=== INGESTION START ===")
+    
+    # Start stage tracking
+    state = start_stage(state, "ingestion")
 
     # ── 1. Determine input type and extract text ─────────────────────
     lines = [line.strip() for line in raw_input.splitlines() if line.strip()]
@@ -219,6 +222,9 @@ def ingestion_node(state: OutreachState) -> OutreachState:
     # Use the first URL if available, else the whole raw input
     identifier = lines[0] if lines else raw_input
     target_hash = compute_target_hash(identifier)
+
+    # Complete stage tracking
+    state = complete_stage(state, "ingestion")
 
     # ── 4. Build updated state ────────────────────────────────────────
     updated: OutreachState = {

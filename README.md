@@ -21,15 +21,18 @@
 ## 📋 Table of Contents
 
 - [Overview](#-overview)
+- [Quick Start (TL;DR)](#-tldr---quick-start-5-minutes)
+- [What You Need to Install](#-what-you-need-to-install)
+- [Uploading to GitHub](#-uploading-to-github)
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)
 - [Architecture](#-architecture)
-- [Quick Start](#-quick-start)
 - [Configuration](#-configuration)
 - [Usage Guide](#-usage-guide)
 - [API Reference](#-api-reference)
 - [Project Structure](#-project-structure)
 - [Development](#-development)
+- [Future Improvements](#-future-improvement-ideas)
 - [Troubleshooting](#-troubleshooting)
 - [Contributing](#-contributing)
 - [License](#-license)
@@ -57,6 +60,146 @@ Traditional cold outreach is:
 
 ---
 
+## ⚡ TL;DR - Quick Start (5 Minutes)
+
+```powershell
+# 1. Prerequisites - Install these first:
+#    - Python 3.10+ (https://python.org)
+#    - Node.js 18+ (https://nodejs.org)
+#    - Ollama (https://ollama.ai)
+
+# 2. Clone & Setup
+git clone https://github.com/yourusername/outreach_engine.git
+cd outreach_engine
+
+# 3. Install Ollama Model (one-time, ~4GB download)
+ollama pull mistral
+
+# 4. Setup Backend
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+
+# 5. Setup Frontend
+cd frontend
+npm install
+cd ..
+
+# 6. Create .env file
+copy .env.example .env
+
+# 7. Run (3 terminals needed)
+# Terminal 1 - Ollama (may already be running as service)
+ollama serve
+
+# Terminal 2 - Backend API
+.\venv\Scripts\Activate.ps1
+python -m uvicorn app.api.main:app --reload --port 8080
+
+# Terminal 3 - Frontend
+cd frontend
+npm run dev
+
+# 8. Open http://localhost:5173 in browser
+```
+
+> **Demo Mode**: If you just want to test the UI without setting up everything, the frontend works in demo mode when the backend is unavailable!
+
+---
+
+## 📦 What You Need to Install
+
+### Required Downloads
+
+| Component | Size | Purpose | How to Install |
+|-----------|------|---------|----------------|
+| **Python 3.10+** | ~30MB | Backend runtime | [python.org/downloads](https://python.org/downloads) |
+| **Node.js 18+** | ~30MB | Frontend runtime | [nodejs.org](https://nodejs.org) |
+| **Ollama** | ~500MB | Local LLM server | [ollama.ai/download](https://ollama.ai/download) |
+| **Mistral Model** | ~4GB | AI brain for text generation | `ollama pull mistral` (after installing Ollama) |
+
+### Auto-Installed (via pip/npm)
+
+These install automatically - no manual download needed:
+
+| Component | What It Does |
+|-----------|--------------|
+| **sentence-transformers** | Offline embeddings (converts text to vectors for similarity search) |
+| **ChromaDB** | Vector database (stores embeddings locally, auto-creates in `chroma_data/`) |
+| **PyPDF2, python-docx** | PDF/DOCX text extraction |
+| **LangChain, LangGraph** | AI workflow orchestration |
+| **FastAPI** | Backend API server |
+| **React, Vite** | Frontend framework |
+
+### Optional (Not Required for Demo)
+
+| Component | When You Need It |
+|-----------|------------------|
+| **PostgreSQL** | Only for permanent database storage (campaigns survive restart) |
+| **Docker** | Only for containerized deployment |
+| **Gmail Credentials** | Only for real email sending |
+| **Twilio Account** | Only for real SMS sending |
+
+### Understanding Key Concepts
+
+#### What are Embeddings?
+- **Problem**: How does AI understand that "Software Engineer" and "Developer" are similar?
+- **Solution**: Convert text to numbers (vectors) - similar text = similar numbers
+- **Example**: "I love coding" → `[0.23, -0.45, 0.87, ...]` (768 numbers)
+- **Offline**: We use `sentence-transformers` library - runs 100% on your computer, no API calls
+
+#### What is ChromaDB (Vector Database)?
+- Stores embeddings for fast similarity search
+- **Use case**: Find past prospects similar to current one
+- **Auto-setup**: Creates `chroma_data/` folder automatically, no configuration needed
+
+---
+
+## 📤 Uploading to GitHub
+
+### What Gets Uploaded (Safe)
+```
+✅ app/              - Python backend code
+✅ frontend/src/     - React frontend code
+✅ requirements.txt  - Python dependencies list
+✅ package.json      - Node dependencies list
+✅ README.md         - Documentation
+✅ .env.example      - Template for environment variables
+✅ .gitignore        - Excludes sensitive files
+✅ docker-compose.yml- Docker configuration
+```
+
+### What Gets Excluded (via .gitignore)
+```
+❌ .env              - Your secrets (API keys, passwords)
+❌ venv/             - Python virtual environment (~500MB)
+❌ node_modules/     - Node packages (~200MB)
+❌ chroma_data/      - Generated vector database
+❌ uploads/          - User uploaded files
+❌ __pycache__/      - Python cache
+❌ credentials.json  - OAuth credentials
+```
+
+### Upload Commands
+```powershell
+# Initialize git (if not already)
+git init
+
+# Add all files (respects .gitignore)
+git add .
+
+# Commit
+git commit -m "Initial commit - Outreach Engine"
+
+# Add remote (replace with your repo URL)
+git remote add origin https://github.com/yourusername/outreach_engine.git
+
+# Push
+git push -u origin main
+```
+
+---
+
 ## ✨ Features
 
 ### Core Features
@@ -72,7 +215,18 @@ Traditional cold outreach is:
 | **💾 Knowledge Base** | ChromaDB stores personas for future reference |
 | **🔄 Similarity Matching** | Leverages past outreach for similar prospects |
 
-### Stretch Features
+### UI Features (ChatGPT-Style Interface)
+
+| Feature | Description |
+|---------|-------------|
+| **📂 Session Sidebar** | Collapsible sidebar showing all past campaigns (like ChatGPT history) |
+| **🔍 LLM Actions Panel** | Expandable bottom panel showing every LLM call with timing, prompts, responses |
+| **📊 Pipeline Progress** | Visual progress bar with stage durations and status indicators |
+| **🏷️ Version Badges** | Shows version number and regeneration count on drafts |
+| **💭 Score Rationale** | Displays AI reasoning for each quality score |
+| **🎨 Color-Coded Scores** | Green (8+), Blue (6+), Yellow (4+), Red (<4) for quick assessment |
+
+### Additional Features
 
 | Feature | Description |
 |---------|-------------|
@@ -80,6 +234,7 @@ Traditional cold outreach is:
 | **🔄 Regeneration** | One-click regenerate with improved prompts |
 | **📱 Responsive UI** | Works on desktop and tablet |
 | **🐳 Docker Ready** | One-command deployment with Docker Compose |
+| **💾 Session Persistence** | Sessions saved to disk, survive restarts |
 
 ---
 
@@ -347,12 +502,47 @@ TWILIO_PHONE_NUMBER=+1234567890
 
 ### Supported LLM Models
 
-| Model | Command | Size | Notes |
-|-------|---------|------|-------|
-| **Mistral** (default) | `ollama pull mistral` | 4.1GB | Best balance of speed/quality |
-| **LLaMA 2** | `ollama pull llama2` | 3.8GB | Good general purpose |
-| **Gemma** | `ollama pull gemma` | 5.0GB | Google's model |
-| **Phi-2** | `ollama pull phi` | 1.7GB | Fastest, smaller output |
+The Outreach Engine uses **Ollama** for 100% offline LLM processing. You can choose from various models based on your hardware and needs:
+
+| Model | Command | Size | RAM Needed | Speed | Quality | Best For |
+|-------|---------|------|------------|-------|---------|----------|
+| **mistral** ⭐ | `ollama pull mistral` | 4.1GB | 8GB+ | Fast | Excellent | Default - best balance |
+| **llama3** | `ollama pull llama3` | 4.7GB | 8GB+ | Fast | Excellent | Latest and greatest |
+| **llama2** | `ollama pull llama2` | 3.8GB | 8GB+ | Fast | Good | Proven reliability |
+| **phi3** | `ollama pull phi3` | 2.3GB | 4GB+ | Very Fast | Good | Low-memory systems |
+| **gemma** | `ollama pull gemma` | 5.0GB | 8GB+ | Medium | Good | Google's alternative |
+| **mixtral** | `ollama pull mixtral` | 26GB | 32GB+ | Slower | Premium | Best quality (needs GPU) |
+
+#### Switching Models
+
+```powershell
+# 1. Pull the new model
+ollama pull llama3
+
+# 2. Update .env
+OLLAMA_MODEL=llama3
+
+# 3. Restart the backend server
+```
+
+#### Model Recommendations
+
+- **🎯 Demo/Hackathon**: Use `mistral` (default) - great quality, runs on most laptops
+- **💻 Low RAM (<8GB)**: Use `phi3` - only 2.3GB, still produces good outreach
+- **🚀 Best Quality**: Use `llama3` or `mixtral` (if you have 32GB+ RAM)
+- **⚡ Fastest**: Use `phi3` for rapid iteration during development
+
+#### Check Your Setup
+
+Run the diagnostic script:
+```powershell
+python check_setup.py
+```
+
+Or call the health API:
+```bash
+curl http://localhost:8080/api/v1/health
+```
 
 Change model in `.env`:
 ```ini
@@ -363,30 +553,51 @@ OLLAMA_MODEL=llama2
 
 ## 📖 Usage Guide
 
+### Input Modes
+
+The application supports **three input modes** (only one is used at a time):
+
+| Mode | Description | Use Case |
+|------|-------------|----------|
+| **📝 Text** | Paste raw profile/resume text directly | Quick testing, copy-paste from anywhere |
+| **🔗 URL** | Enter LinkedIn or company URL | Auto-fetches and parses webpage content |
+| **📄 File** | Upload PDF or DOCX file | Resume uploads, formal documents |
+
+> **Important**: Select the appropriate tab and provide input for that mode only. The system processes **one input type per campaign**.
+
+### Demo Mode
+
+If the backend is unavailable, the frontend automatically enters **Demo Mode**:
+- Shows realistic mock data for demonstration
+- All UI features work (approve, regenerate, skip)
+- No actual API calls are made
+- Perfect for presentations and testing UI
+
 ### Basic Workflow
 
 1. **Enter Target Data**
-   - Paste LinkedIn URL, OR
-   - Enter raw profile text, OR
-   - Upload PDF/DOC resume
+   - Choose input mode (Text/URL/File tab)
+   - Provide the relevant content
 
 2. **Launch Campaign**
-   - Click "Launch Campaign" button
+   - Click "🚀 Launch Campaign" button
    - Watch real-time progress through 7 stages
 
 3. **Review Drafts**
    - See all 5 channel drafts side-by-side
-   - Each draft shows quality score (0-10)
+   - Each draft shows quality score (0-10) with color coding
+   - Score rationale explains why
 
 4. **Make Decisions**
    - ✅ **Approve** - Mark for sending
-   - 🔄 **Regenerate** - Generate new version
+   - 🔄 **Regenerate** - Generate new version (version badge updates)
    - ❌ **Skip** - Exclude from campaign
 
 5. **Complete Campaign**
    - Click "Submit Choices"
    - Approved messages are sent (or mocked)
    - Data persisted for future reference
+   - Session appears in sidebar history
 
 ### Example Input
 
@@ -694,7 +905,50 @@ alembic upgrade head
 
 ---
 
-## 🐛 Troubleshooting
+## � Future Improvement Ideas
+
+Here are ways you can extend this project:
+
+### Easy Improvements
+| Idea | File to Modify | Effort |
+|------|----------------|--------|
+| Better prompts | `app/prompts.py` | 1 hour |
+| New color themes | `frontend/src/App.css` | 30 min |
+| Add company logo | `frontend/index.html` + CSS | 30 min |
+| Change default model | `.env` → `OLLAMA_MODEL=llama3` | 5 min |
+
+### Medium Improvements
+| Idea | What to Do | Effort |
+|------|------------|--------|
+| Add Twitter/X channel | Add `draft_twitter_node` in `draft_agents.py`, update workflow | 2-3 hours |
+| Export to CSV | Add download button in App.tsx, API endpoint for CSV | 2 hours |
+| Analytics dashboard | New React component showing campaign stats | 3-4 hours |
+| A/B test drafts | Generate 2 versions per channel, let user pick | 3 hours |
+
+### Advanced Improvements
+| Idea | What to Do | Effort |
+|------|------------|--------|
+| Real Gmail integration | Setup Google OAuth, use `gmail_tool.py` | 4-5 hours |
+| Real SMS via Twilio | Create Twilio account, configure `twilio_tool.py` | 2-3 hours |
+| LinkedIn scraper | Use Selenium/Puppeteer for profile data extraction | 5+ hours |
+| Fine-tune custom model | Train on successful outreach messages | Days |
+
+### Where to Modify Things
+
+| Want to Change... | Look in... |
+|-------------------|------------|
+| AI prompts/personality | `app/prompts.py` |
+| Draft generation logic | `app/agents/draft_agents.py` |
+| Scoring criteria | `app/agents/scoring_agent.py` |
+| Pipeline flow | `app/graph/workflow.py` |
+| UI layout/components | `frontend/src/App.tsx` |
+| Colors/styling | `frontend/src/App.css` |
+| API endpoints | `app/api/main.py` |
+| Database models | `app/db/models.py` |
+
+---
+
+## �🐛 Troubleshooting
 
 ### Common Issues
 

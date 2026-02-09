@@ -18,12 +18,15 @@ from __future__ import annotations
 import json
 import logging
 import re
+import time
+import uuid
 from typing import Any
+from datetime import datetime
 
 from langchain_ollama import OllamaLLM
 
 from app.config import settings
-from app.graph.state import OutreachState, Draft
+from app.graph.state import OutreachState, Draft, create_llm_action
 
 logger = logging.getLogger(__name__)
 
@@ -214,8 +217,8 @@ def _extract_json(raw: str) -> dict[str, Any]:
     return json.loads(cleaned[start:end])
 
 
-def _generate_draft(channel: str, state: OutreachState) -> Draft:
-    """Core logic shared by all four channel nodes."""
+def _generate_draft(channel: str, state: OutreachState) -> tuple[Draft, dict]:
+    """Core logic shared by all channel nodes. Returns (draft, llm_action)."""
     tone = state.get("tone", {})
     company  = state.get("company", "their company")
     role     = state.get("role", "a professional")
@@ -242,25 +245,52 @@ def _generate_draft(channel: str, state: OutreachState) -> Draft:
 
     llm = _get_llm()
     logger.info("[%s] Calling Ollama …", channel.upper())
+    start_time = time.time()
     raw_output = llm.invoke(prompt)
+    duration_ms = int((time.time() - start_time) * 1000)
     logger.debug("[%s] Raw output:\n%s", channel.upper(), raw_output)
 
+    parse_status = "success"
+    parse_error = None
     try:
         parsed = _extract_json(raw_output)
     except (ValueError, json.JSONDecodeError) as exc:
         logger.error("[%s] JSON parse failed: %s", channel.upper(), exc)
+        parse_status = "error"
+        parse_error = str(exc)
         parsed = {"body": raw_output.strip()[:1000]}
 
+    # Create LLM action record
+    action_id = str(uuid.uuid4())
+    llm_action = create_llm_action(
+        stage="drafting",
+        agent=f"draft_{channel}_agent",
+        action=f"Generating {channel.upper()} message draft",
+        model=settings.ollama.model,
+        prompt=prompt,
+        response=raw_output,
+        duration_ms=duration_ms,
+        status=parse_status,
+        error_message=parse_error,
+    )
+
+    # Create enhanced draft with tracking fields
     draft: Draft = {
+        "id": str(uuid.uuid4()),
         "channel":  channel,
         "subject":  parsed.get("subject"),         # only email has this
         "body":     parsed.get("body", ""),
         "score":    None,
+        "score_rationale": None,
         "approved": False,
         "sent":     False,
+        "version": 1,
+        "regenerate_count": 0,
+        "created_at": datetime.utcnow().isoformat() + "Z",
+        "llm_action_id": llm_action["id"],
     }
     logger.info("[%s] Draft generated (%d chars)", channel.upper(), len(draft["body"]))
-    return draft
+    return draft, llm_action
 
 
 # ---------------------------------------------------------------------------
@@ -269,25 +299,35 @@ def _generate_draft(channel: str, state: OutreachState) -> Draft:
 # They all do the same thing but are separate so LangGraph can fan them out.
 
 def draft_email_node(state: OutreachState) -> OutreachState:
-    draft = _generate_draft("email", state)
-    return {**state, "drafts": state.get("drafts", []) + [draft]}
+    draft, llm_action = _generate_draft("email", state)
+    llm_actions = list(state.get("llm_actions", []))
+    llm_actions.append(llm_action)
+    return {**state, "drafts": state.get("drafts", []) + [draft], "llm_actions": llm_actions}
 
 
 def draft_sms_node(state: OutreachState) -> OutreachState:
-    draft = _generate_draft("sms", state)
-    return {**state, "drafts": state.get("drafts", []) + [draft]}
+    draft, llm_action = _generate_draft("sms", state)
+    llm_actions = list(state.get("llm_actions", []))
+    llm_actions.append(llm_action)
+    return {**state, "drafts": state.get("drafts", []) + [draft], "llm_actions": llm_actions}
 
 
 def draft_linkedin_node(state: OutreachState) -> OutreachState:
-    draft = _generate_draft("linkedin", state)
-    return {**state, "drafts": state.get("drafts", []) + [draft]}
+    draft, llm_action = _generate_draft("linkedin", state)
+    llm_actions = list(state.get("llm_actions", []))
+    llm_actions.append(llm_action)
+    return {**state, "drafts": state.get("drafts", []) + [draft], "llm_actions": llm_actions}
 
 
 def draft_instagram_node(state: OutreachState) -> OutreachState:
-    draft = _generate_draft("instagram", state)
-    return {**state, "drafts": state.get("drafts", []) + [draft]}
+    draft, llm_action = _generate_draft("instagram", state)
+    llm_actions = list(state.get("llm_actions", []))
+    llm_actions.append(llm_action)
+    return {**state, "drafts": state.get("drafts", []) + [draft], "llm_actions": llm_actions}
 
 
 def draft_whatsapp_node(state: OutreachState) -> OutreachState:
-    draft = _generate_draft("whatsapp", state)
-    return {**state, "drafts": state.get("drafts", []) + [draft]}
+    draft, llm_action = _generate_draft("whatsapp", state)
+    llm_actions = list(state.get("llm_actions", []))
+    llm_actions.append(llm_action)
+    return {**state, "drafts": state.get("drafts", []) + [draft], "llm_actions": llm_actions}
