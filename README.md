@@ -376,7 +376,7 @@ git push -u origin main
 
 ```powershell
 # Clone repository
-git clone https://github.com/yourusername/outreach_engine.git
+git clone https://github.com/codebysamarth/outreach_engine.git
 cd outreach_engine
 
 # Run setup script
