@@ -33,6 +33,8 @@ Field-by-field lifecycle
 
 from __future__ import annotations
 from typing import Any, TypedDict
+from typing_extensions import Annotated
+from operator import add
 from datetime import datetime
 import uuid
 
@@ -114,20 +116,20 @@ class OutreachState(TypedDict, total=False):
     similar_personas: list[dict[str, Any]]  # from vector DB
 
     # ── drafts (parallel agents → scoring → approval → execution) ───────
-    drafts: list[Draft]
+    drafts: Annotated[list[Draft], add]  # use + operator to merge from parallel nodes
 
     # ── approval (human-in-the-loop) ─────────────────────────────────────
     approved_channels: list[str]  # channels the user approved
     pending_approval: list[str]   # channels awaiting approval
 
     # ── execution results ────────────────────────────────────────────────
-    execution_results: list[dict[str, Any]]
+    execution_results: Annotated[list[dict[str, Any]], add]  # append-only
 
     # ── LLM action tracking (for frontend visibility) ────────────────────
-    llm_actions: list[LLMAction]  # all LLM calls made during this run
+    llm_actions: Annotated[list[LLMAction], add]  # all LLM calls made during this run
     
     # ── Stage tracking (for timing visibility) ───────────────────────────
-    stages: list[StageInfo]       # timing info for each stage
+    stages: Annotated[list[StageInfo], add]  # timing info for each stage
 
     # ── run metadata ─────────────────────────────────────────────────────
     run_id: str

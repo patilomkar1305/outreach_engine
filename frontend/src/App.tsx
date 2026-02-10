@@ -867,6 +867,18 @@ function App() {
   };
 
   const hasApprovedDrafts = campaign?.drafts.some(d => d.approved);
+  
+  // Smart detection: show approval UI if drafts have scores but aren't approved yet
+  const needsApproval = campaign && campaign.drafts.length > 0 
+    && campaign.drafts.every(d => d.score !== null && d.score !== undefined)
+    && !hasApprovedDrafts
+    && campaign.status !== 'completed';
+  
+  const showApprovalUI = campaign && (
+    campaign.current_stage === 'approval' 
+    || campaign.status === 'approval'
+    || needsApproval
+  );
 
   return (
     <div className="app-container">
@@ -997,6 +1009,16 @@ John Smith is a Senior Software Engineer at TechCorp Inc with 8 years of experie
 
           {campaign && (
             <div className="campaign-view">
+              {showApprovalUI && (
+                <div className="approval-banner">
+                  <span className="banner-icon">👋</span>
+                  <div className="banner-content">
+                    <strong>Action Required:</strong> Review and approve the generated drafts below
+                  </div>
+                  <span className="banner-arrow">↓</span>
+                </div>
+              )}
+              
               <div className="campaign-header">
                 <PersonaCard 
                   persona={campaign.persona} 
@@ -1024,19 +1046,27 @@ John Smith is a Senior Software Engineer at TechCorp Inc with 8 years of experie
                     ))}
                   </div>
                   
-                  {campaign.current_stage === 'approval' && (
-                    <div className="approval-actions">
-                      {Object.keys(approvalChoices).length > 0 && (
-                        <button className="submit-btn" onClick={handleSubmitApprovals}>
-                          Submit Choices →
-                        </button>
-                      )}
+                  {showApprovalUI && (
+                    <div className="approval-actions-container">
+                      <div className="approval-summary">
+                        <p>
+                          {Object.keys(approvalChoices).length === 0 
+                            ? "Select action for each draft above (Approve, Regenerate, or Skip)"
+                            : `Selected: ${Object.keys(approvalChoices).length} draft(s)`}
+                        </p>
+                      </div>
                       
-                      {hasApprovedDrafts && Object.keys(approvalChoices).length === 0 && (
-                        <button className="complete-btn" onClick={handleCompleteCampaign}>
-                          ✓ Complete Campaign
-                        </button>
-                      )}
+                      <div className="approval-actions">
+                        {Object.keys(approvalChoices).length > 0 ? (
+                          <button className="submit-btn primary-action" onClick={handleSubmitApprovals}>
+                            ✓ Submit {Object.keys(approvalChoices).length} Choice(s) →
+                          </button>
+                        ) : hasApprovedDrafts ? (
+                          <button className="complete-btn primary-action" onClick={handleCompleteCampaign}>
+                            🚀 Complete Campaign
+                          </button>
+                        ) : null}
+                      </div>
                     </div>
                   )}
                 </div>

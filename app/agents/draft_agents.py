@@ -300,34 +300,24 @@ def _generate_draft(channel: str, state: OutreachState) -> tuple[Draft, dict]:
 
 def draft_email_node(state: OutreachState) -> OutreachState:
     draft, llm_action = _generate_draft("email", state)
-    llm_actions = list(state.get("llm_actions", []))
-    llm_actions.append(llm_action)
-    return {**state, "drafts": state.get("drafts", []) + [draft], "llm_actions": llm_actions}
+    return {"drafts": [draft], "llm_actions": [llm_action]}
 
 
 def draft_sms_node(state: OutreachState) -> OutreachState:
     draft, llm_action = _generate_draft("sms", state)
-    llm_actions = list(state.get("llm_actions", []))
-    llm_actions.append(llm_action)
-    return {**state, "drafts": state.get("drafts", []) + [draft], "llm_actions": llm_actions}
+    return {"drafts": [draft], "llm_actions": [llm_action]}
 
 
 def draft_linkedin_node(state: OutreachState) -> OutreachState:
     draft, llm_action = _generate_draft("linkedin", state)
-    llm_actions = list(state.get("llm_actions", []))
-    llm_actions.append(llm_action)
-    return {**state, "drafts": state.get("drafts", []) + [draft], "llm_actions": llm_actions}
+    return {"drafts": [draft], "llm_actions": [llm_action]}
 
 
 def draft_instagram_node(state: OutreachState) -> OutreachState:
     draft, llm_action = _generate_draft("instagram", state)
-    llm_actions = list(state.get("llm_actions", []))
-    llm_actions.append(llm_action)
-    return {**state, "drafts": state.get("drafts", []) + [draft], "llm_actions": llm_actions}
+    return {"drafts": [draft], "llm_actions": [llm_action]}
 
 
 def draft_whatsapp_node(state: OutreachState) -> OutreachState:
     draft, llm_action = _generate_draft("whatsapp", state)
-    llm_actions = list(state.get("llm_actions", []))
-    llm_actions.append(llm_action)
-    return {**state, "drafts": state.get("drafts", []) + [draft], "llm_actions": llm_actions}
+    return {"drafts": [draft], "llm_actions": [llm_action]}

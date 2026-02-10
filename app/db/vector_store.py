@@ -42,21 +42,20 @@ def _get_embed_model() -> SentenceTransformer:
 
 
 # ---------------------------------------------------------------------------
-# ChromaDB client  (connects to the Docker container)
+# ChromaDB client  (embedded mode - no server needed)
 # ---------------------------------------------------------------------------
-_chroma_client: chromadb.HttpClient | None = None
+_chroma_client: chromadb.PersistentClient | None = None
 
 
-def _get_chroma_client() -> chromadb.HttpClient:
+def _get_chroma_client() -> chromadb.PersistentClient:
     global _chroma_client
     if _chroma_client is None:
-        _chroma_client = chromadb.HttpClient(
-            host=settings.chroma.host,
-            port=settings.chroma.port,
+        # Use persistent client (embedded mode) - stores data locally
+        _chroma_client = chromadb.PersistentClient(
+            path="./chroma_data"  # Local directory for ChromaDB storage
         )
         logger.info(
-            "Connected to ChromaDB at %s:%s",
-            settings.chroma.host, settings.chroma.port,
+            "Connected to ChromaDB (embedded mode) at ./chroma_data",
         )
     return _chroma_client
 

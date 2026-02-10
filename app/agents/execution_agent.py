@@ -109,4 +109,4 @@ def execution_node(state: OutreachState) -> OutreachState:
         draft["sent"] = True
 
     logger.info("Execution complete. Results: %s", results)
-    return {**state, "execution_results": results, "status": "executed"}
+    return {"execution_results": results, "status": "executed"}

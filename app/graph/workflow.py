@@ -48,6 +48,7 @@ from __future__ import annotations
 import logging
 
 from langgraph.graph import StateGraph, START, END
+from langgraph.checkpoint.memory import MemorySaver
 
 from app.graph.state import OutreachState
 
@@ -82,20 +83,24 @@ def regen_drafts_node(state: OutreachState) -> OutreachState:
     logger.info("REGEN: channels=%s", regen_channels)
 
     updated_drafts = []
+    new_llm_actions = []
     for d in state.get("drafts", []):
         if d["channel"] in regen_channels:
             # Re-generate this draft
-            new_draft = _generate_draft(d["channel"], state)
+            new_draft, llm_action = _generate_draft(d["channel"], state)
             updated_drafts.append(new_draft)
+            new_llm_actions.append(llm_action)
             logger.info("[%s] Regenerated.", d["channel"].upper())
         else:
             updated_drafts.append(d)
 
     regen_count = state.get("regen_count", 0) + 1
+    # Note: Since regen runs alone (not parallel), we can replace the entire drafts list
+    # The add reducer only merges when multiple parallel nodes update the same field
     return {
-        **state,
         "drafts":          updated_drafts,
-        "regen_channels":  [],            # clear
+        "llm_actions":     new_llm_actions,
+        "regen_channels":  [],
         "regen_count":     regen_count,
         "status":          "regen_done",
     }
@@ -121,7 +126,7 @@ def _needs_regen(state: OutreachState) -> str:
 # Graph builder
 # ===========================================================================
 
-def build_graph() -> StateGraph:
+def build_graph():
     """
     Assemble and compile the full LangGraph.
     Returns a compiled graph ready for .invoke() or .stream().
@@ -185,7 +190,8 @@ def build_graph() -> StateGraph:
     graph.add_edge("execution",   "persistence")
     graph.add_edge("persistence", END)
 
-    # ── Compile ────────────────────────────────────────────────────────
-    compiled = graph.compile()
+    # ── Compile with checkpointer for interrupt/resume support ────────
+    checkpointer = MemorySaver()
+    compiled = graph.compile(checkpointer=checkpointer)
     logger.info("LangGraph compiled: nodes=%s", list(graph.nodes))
     return compiled

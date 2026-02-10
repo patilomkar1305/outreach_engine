@@ -844,33 +844,158 @@ body {
   font-size: 14px;
 }
 
+/* ─── APPROVAL BANNER ──────────────────────────────────────────────────────── */
+.approval-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px 24px;
+  background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
+  border-radius: var(--radius-md);
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  animation: bounce-subtle 2s infinite;
+}
+
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.banner-icon {
+  font-size: 24px;
+  animation: wave 1.5s infinite;
+}
+
+@keyframes wave {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(20deg);
+  }
+  75% {
+    transform: rotate(-20deg);
+  }
+}
+
+.banner-content {
+  flex: 1;
+  color: var(--text-primary);
+  font-size: 16px;
+}
+
+.banner-content strong {
+  font-weight: 700;
+}
+
+.banner-arrow {
+  font-size: 24px;
+  animation: bounce-arrow 1s infinite;
+}
+
+@keyframes bounce-arrow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
+}
+
 /* ─── APPROVAL ACTIONS ─────────────────────────────────────────────────────── */
+.approval-actions-container {
+  margin-top: 32px;
+  padding: 28px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl), 0 0 40px rgba(102, 126, 234, 0.4);
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+}
+
+.approval-actions-container::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  background: linear-gradient(45deg, #667eea, #764ba2, #667eea);
+  border-radius: var(--radius-lg);
+  z-index: -1;
+  animation: border-glow 3s linear infinite;
+  opacity: 0.5;
+}
+
+@keyframes border-glow {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.5);
+  }
+}
+
+.approval-summary {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.approval-summary p {
+  color: var(--text-inverse);
+  font-size: 16px;
+  font-weight: 500;
+}
+
 .approval-actions {
   display: flex;
   justify-content: center;
   gap: 16px;
-  margin-top: 24px;
 }
 
 .submit-btn,
 .complete-btn {
-  padding: 14px 32px;
+  padding: 16px 40px;
   border: none;
   border-radius: var(--radius-md);
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
   cursor: pointer;
   transition: all var(--transition-fast);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.primary-action {
+  animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  50% {
+    box-shadow: 0 4px 24px rgba(255, 255, 255, 0.4);
+  }
 }
 
 .submit-btn {
-  background: var(--primary);
-  color: var(--text-inverse);
+  background: var(--text-inverse);
+  color: var(--primary);
 }
 
 .submit-btn:hover {
-  background: var(--primary-dark);
-  transform: translateY(-1px);
+  background: var(--bg-secondary);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.submit-btn:active {
+  transform: translateY(0);
 }
 
 .complete-btn {
@@ -880,7 +1005,12 @@ body {
 
 .complete-btn:hover {
   background: var(--secondary-dark);
-  transform: translateY(-1px);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+}
+
+.complete-btn:active {
+  transform: translateY(0);
 }
 
 /* ─── COMPLETION CARD ──────────────────────────────────────────────────────── */
@@ -1172,7 +1302,22 @@ body {
     flex-direction: column;
   }
   
+  .approval-actions-container {
+    padding: 16px;
+  }
+  
+  .approval-summary p {
+    font-size: 14px;
+  }
+  
   .approval-actions {
     flex-direction: column;
+  }
+  
+  .submit-btn,
+  .complete-btn {
+    padding: 14px 24px;
+    font-size: 14px;
+    width: 100%;
   }
 }

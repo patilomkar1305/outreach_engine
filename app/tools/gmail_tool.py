@@ -35,19 +35,21 @@ def _init_gmail() -> Any:
     )
     from langchain_google_community.gmail.send_message import GmailSendMessage
 
-    credentials = get_gmail_credentials(
-        token_file=settings.gmail.token_path,
-        scopes=["https://mail.google.com/"],
-        client_secrets_file=settings.gmail.credentials_path,
-    )
+    # Get Gmail credentials - this will use credentials.json from current directory
+    # or the path specified in GMAIL_CREDENTIALS_PATH environment variable
+    try:
+        credentials = get_gmail_credentials(
+            token_file=str(settings.gmail.token_path),
+            scopes=["https://mail.google.com/"],
+        )
+    except TypeError:
+        # Fallback: older API might not have token_file parameter
+        credentials = get_gmail_credentials(
+            scopes=["https://mail.google.com/"],
+        )
+    
     api_resource = build_resource_service(credentials=credentials)
     _gmail_send_tool = GmailSendMessage(api_resource=api_resource)
-    logger.info("Gmail tool initialised.")
-    return _gmail_send_tool
-
-
-# ---------------------------------------------------------------------------
-# Public API
 # ---------------------------------------------------------------------------
 
 def send_gmail(to: str, subject: str, body: str) -> dict[str, Any]:

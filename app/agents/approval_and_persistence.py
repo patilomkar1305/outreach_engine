@@ -89,7 +89,6 @@ def approval_node(state: OutreachState) -> OutreachState:
 
         logger.info("Approval: approved=%s  regen=%s", approved, regen)
         return {
-            **state,
             "drafts":            updated_drafts,
             "approved_channels": approved,
             "regen_channels":    regen,
@@ -150,7 +149,6 @@ def _inline_cli_approval(state: OutreachState) -> OutreachState:
 
     logger.info("CLI Approval: approved=%s  regen=%s", approved, regen)
     return {
-        **state,
         "drafts":            updated_drafts,
         "approved_channels": approved,
         "regen_channels":    regen,
@@ -199,13 +197,23 @@ def persistence_node(state: OutreachState) -> OutreachState:
 
     # ── 2. Postgres – write profile + persona + drafts + run ─────────
     try:
-        asyncio.run(_persist_to_postgres(target_hash, safe, state))
+        # Check if we're already in an async context
+        try:
+            loop = asyncio.get_running_loop()
+            # We're in an async context - create a task in a new thread
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                executor.submit(lambda: asyncio.run(_persist_to_postgres(target_hash, safe, state))).result()
+        except RuntimeError:
+            # No running loop - safe to use asyncio.run()
+            asyncio.run(_persist_to_postgres(target_hash, safe, state))
+        
         logger.info("Postgres persist OK.")
     except Exception as exc:
         logger.error("Postgres persist failed: %s", exc, exc_info=True)
         # Pipeline does NOT fail here – outreach already sent.
 
-    return {**state, "status": "persisted"}
+    return {"status": "persisted"}
 
 
 # ---------------------------------------------------------------------------

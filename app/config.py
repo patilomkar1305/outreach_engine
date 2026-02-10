@@ -40,7 +40,7 @@ class PostgresSettings(BaseSettings):
 
 class OllamaSettings(BaseSettings):
     base_url: str = "http://localhost:11434"
-    model:    str = "mistral"
+    model:    str = "llama3:8b"
 
     model_config = {"env_prefix": "OLLAMA_"}
 

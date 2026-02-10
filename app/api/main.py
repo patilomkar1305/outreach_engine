@@ -59,6 +59,12 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 def _build_campaign_response(campaign: dict, campaign_id: str) -> CampaignResponse:
     """Build a CampaignResponse from campaign data."""
     state = campaign.get("state", {})
+    
+    # Defensive check: ensure state is a dict
+    if not isinstance(state, dict):
+        logger.error(f"Campaign {campaign_id} has invalid state type: {type(state)}")
+        state = {}
+    
     drafts_data = state.get("drafts", [])
     llm_actions_data = state.get("llm_actions", [])
     stages_data = state.get("stages", [])
@@ -336,7 +342,8 @@ class ApprovalRequest(BaseModel):
 @app.post("/api/v1/campaigns/{campaign_id}/approve")
 async def approve_drafts(
     campaign_id: str,
-    request: ApprovalRequest
+    request: ApprovalRequest,
+    background_tasks: BackgroundTasks
 ):
     """
     Handle draft approval/regeneration.
@@ -354,8 +361,15 @@ async def approve_drafts(
     
     state_manager.update_state(campaign_id, state)
     
-    # TODO: Resume workflow from approval node
-    # For prototype, we'll handle this manually
+    logger.info(f"Approval received for campaign {campaign_id}: approved={request.approved}, regen={request.regen}")
+    
+    # Resume workflow from interrupt
+    background_tasks.add_task(
+        run_campaign_workflow,
+        campaign_id,
+        state.get("raw_input", ""),
+        resume_from_interrupt=True
+    )
     
     return {"status": "ok", "approved": request.approved, "regen": request.regen}
 

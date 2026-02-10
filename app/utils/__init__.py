@@ -4,7 +4,7 @@ app/utils module
 Utility functions for the Outreach Engine.
 """
 
-from app.utils.sanitizer import sanitize_json_output
+from app.utils.sanitizer import sanitize_for_storage
 from app.utils.llm import (
     check_ollama_health,
     check_ollama_health_sync,
@@ -13,7 +13,7 @@ from app.utils.llm import (
 )
 
 __all__ = [
-    "sanitize_json_output",
+    "sanitize_for_storage",
     "check_ollama_health",
     "check_ollama_health_sync",
     "get_model_info",

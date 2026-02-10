@@ -79,7 +79,7 @@ def scoring_node(state: OutreachState) -> OutreachState:
     if not drafts:
         logger.warning("No drafts to score.")
         state = complete_stage(state, "scoring")
-        return {**state, "status": "scored"}
+        return {"status": "scored"}
 
     tone = state.get("tone", {})
 
@@ -159,4 +159,4 @@ def scoring_node(state: OutreachState) -> OutreachState:
     # Complete stage tracking
     state = complete_stage(state, "scoring")
     
-    return {**state, "drafts": updated_drafts, "status": "scored"}
+    return {"drafts": updated_drafts, "status": "scored"}

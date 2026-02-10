@@ -1,0 +1,283 @@
+{
+  "session_id": "fa8b3f6d-fd9e-402e-8992-69f436ab7c9e",
+  "name": "Session 2",
+  "created_at": "2026-02-10T08:04:49.599710Z",
+  "updated_at": "2026-02-10T08:09:06.533965Z",
+  "campaigns": [
+    {
+      "id": "1f731057-985e-4c3d-8af7-bfaf1d2e412a",
+      "session_id": "fa8b3f6d-fd9e-402e-8992-69f436ab7c9e",
+      "status": "scored",
+      "current_stage": "scoring",
+      "input": {
+        "type": "file",
+        "content": "uploads\\Test.pdf"
+      },
+      "state": {
+        "raw_input": "",
+        "raw_profile_text": "",
+        "target_identifier": "uploads\\Test.pdf",
+        "target_hash": "23894804c1f213622e93b2ffbbe8da31e439fccd1ff69446d3d731545fe0def3",
+        "company": "CloudScale Technologies \nSan Fr",
+        "role": "VP",
+        "industry": "tech",
+        "links": {},
+        "tone": {
+          "formality_level": "unknown",
+          "communication_style": "{\n  \"formality_level\": \"semi-formal\",\n  \"communication_style\": \"I keep things casual and straightforward, preferring real conversations over polished pitches.\",\n  \"language_hints\": \"uses emojis (e.g., \ud83c\udf32), avoids corporate jargon, tends to use short sentences, and employs casual punctuation (e.g., no formal closing phrases)\",\n  \"interests\": [\"Distributed systems architecture\", \"Kubernetes & cloud-native technologies\", \"Platform engineering & developer experience\", \"Engineering leadership & team b",
+          "language_hints": "",
+          "interests": [],
+          "recent_activity_summary": "",
+          "tone_keywords": []
+        },
+        "similar_personas": [],
+        "drafts": [
+          {
+            "id": "109e7525-b2bd-4bc0-9f26-87f5ac2de5b5",
+            "channel": "email",
+            "subject": null,
+            "body": "Here is the cold email:\n\n{\n\"subject\": \"Kubernetes Insights for CloudScale Tech\",\n\"body\": \"Hey VP of CloudScale Technologies \ud83d\udc4b,\n\nI came across CloudScale and was impressed by your work on distributed systems architecture. As someone who's passionate about Kubernetes & cloud-native technologies, I thought you might appreciate some new ideas.\n\nLately, I've been exploring ways to optimize platform engineering for developers. I stumbled upon a fascinating article on the importance of observability in cloud-native apps. It got me thinking - how can we apply similar principles to improve our own workflows?\n\nIf you're interested in discussing further or want to learn more about my approach, reply to this email and let's grab a quick call.\n\nBest, [Your Name]\"\n}",
+            "score": 8.5,
+            "score_rationale": "The email draft feels personalized, with a clear connection to CloudScale Technologies' work on distributed systems architecture. The tone is casual and straightforward, matching the persona's style.",
+            "approved": false,
+            "sent": false,
+            "version": 1,
+            "regenerate_count": 0,
+            "created_at": "2026-02-10T08:07:27.852016Z",
+            "llm_action_id": "306a9dda-0f13-47c5-bd61-f9b462a1ffae"
+          },
+          {
+            "id": "0de77be3-8892-41af-a8fe-6ffc1726d40a",
+            "channel": "instagram",
+            "subject": null,
+            "body": "Hey [VP's Name], \ud83d\udc4b I saw that CloudScale Technologies is working on some amazing stuff with Kubernetes and cloud-native tech. As someone who's passionate about distributed systems architecture, I'd love to explore how your team is tackling these challenges. Wanna chat more? \ud83e\udd14 Reply or check out our recent work on [link]!",
+            "score": 6.5,
+            "score_rationale": "The Instagram draft lacks personalization and feels more like a generic message. While it matches the persona's tone in terms of being casual, it doesn't provide much context or value to the recipient.",
+            "approved": false,
+            "sent": false,
+            "version": 1,
+            "regenerate_count": 0,
+            "created_at": "2026-02-10T08:07:49.871943Z",
+            "llm_action_id": "f6f91aac-d3c0-4bec-9ab6-f3443432bdea"
+          },
+          {
+            "id": "4ecc63a1-5fce-4f5e-a571-3b4e522d435e",
+            "channel": "linkedin",
+            "subject": null,
+            "body": "Hi [VP's Name], \ud83d\ude4b\u200d\u2642\ufe0f I came across CloudScale Technologies and was impressed by the innovative work you're doing in cloud-native technologies. As someone who's passionate about distributed systems architecture, I'm always excited to learn from others in the field. \ud83e\udd14 Would love to start a conversation with you about your experience scaling complex systems and how you see the industry evolving. What are some of the most interesting challenges you've faced recently? Let me know if you're open to chatting.",
+            "score": 7.5,
+            "score_rationale": "The LinkedIn draft is well-structured and provides some personalization by referencing CloudScale Technologies' innovative work. However, it feels a bit formal for the persona's style, which prefers real conversations over polished pitches.",
+            "approved": false,
+            "sent": false,
+            "version": 1,
+            "regenerate_count": 0,
+            "created_at": "2026-02-10T08:06:55.013406Z",
+            "llm_action_id": "09b973ca-3979-44f6-82d3-7708bd18b432"
+          },
+          {
+            "id": "ab2b31c5-9829-445d-ab47-ee1ffad08e56",
+            "channel": "sms",
+            "subject": null,
+            "body": "Hi VP, \ud83d\udc4b I'm [Your Name], excited about CloudScale's innovative work in distributed systems. Would love to discuss how our expertise can help you drive success. Let's connect?",
+            "score": 4,
+            "score_rationale": "The SMS draft is extremely brief and lacks any personalization or value proposition. It feels like a generic message that doesn't match the persona's tone or style.",
+            "approved": false,
+            "sent": false,
+            "version": 1,
+            "regenerate_count": 0,
+            "created_at": "2026-02-10T08:06:27.023487Z",
+            "llm_action_id": "f67517da-5a4f-46f3-9be0-b8d1407d6a0d"
+          },
+          {
+            "id": "716cce08-ee5f-41cd-bd23-aa3aeba14520",
+            "channel": "whatsapp",
+            "subject": null,
+            "body": "Hey David \ud83d\udc4b, hope you're doing well! I came across CloudScale and was impressed by the innovative work you're doing in cloud-native technologies. Would love to learn more about your experience with Kubernetes and distributed systems architecture. Can we grab a quick call this week? \ud83d\udcde",
+            "score": 8,
+            "score_rationale": "The WhatsApp draft is well-written and provides some personalization by referencing CloudScale Technologies' innovative work. The tone is casual, matching the persona's style, but could be improved with a clearer call-to-action.",
+            "approved": false,
+            "sent": false,
+            "version": 1,
+            "regenerate_count": 0,
+            "created_at": "2026-02-10T08:06:05.174579Z",
+            "llm_action_id": "0f8c2792-fe60-4d5e-be42-f84e9b92138a"
+          }
+        ],
+        "execution_results": [],
+        "llm_actions": [
+          {
+            "id": "c548bacd-8094-421c-87f7-776890c75750",
+            "timestamp": "2026-02-10T08:05:39.694682Z",
+            "stage": "persona",
+            "agent": "persona_agent",
+            "action": "Analyzing profile to extract communication style and persona",
+            "model": "llama3:8b",
+            "prompt_preview": "You are an expert communication-style analyst.\n\nGiven the following publicly available profile text about a professional,\nderive a detailed tone & style profile. Your output MUST be valid JSON\nwith EX...",
+            "response_preview": "{\n  \"formality_level\": \"semi-formal\",\n  \"communication_style\": \"I keep things casual and straightforward, preferring real conversations over polished pitches.\",\n  \"language_hints\": \"uses emojis (e.g.,...",
+            "tokens_used": null,
+            "duration_ms": 47953,
+            "status": "error",
+            "error_message": "Expecting value: line 1 column 1 (char 0)"
+          },
+          {
+            "id": "306a9dda-0f13-47c5-bd61-f9b462a1ffae",
+            "timestamp": "2026-02-10T08:07:27.852016Z",
+            "stage": "drafting",
+            "agent": "draft_email_agent",
+            "action": "Generating EMAIL message draft",
+            "model": "llama3:8b",
+            "prompt_preview": "You are a world-class cold-outreach copywriter.\nWrite a cold EMAIL to a professional at CloudScale Technologies \nSan Fr who works as a VP.\n\n\u2500\u2500\u2500 TONE PROFILE (match this exactly) \u2500\u2500\u2500\n{\n  \"formality_lev...",
+            "response_preview": "Here is the cold email:\n\n{\n\"subject\": \"Kubernetes Insights for CloudScale Tech\",\n\"body\": \"Hey VP of CloudScale Technologies \ud83d\udc4b,\n\nI came across CloudScale and was impressed by your work on distributed s...",
+            "tokens_used": null,
+            "duration_ms": 107235,
+            "status": "error",
+            "error_message": "Invalid control character at: line 3 column 46 (char 101)"
+          },
+          {
+            "id": "f6f91aac-d3c0-4bec-9ab6-f3443432bdea",
+            "timestamp": "2026-02-10T08:07:49.871943Z",
+            "stage": "drafting",
+            "agent": "draft_instagram_agent",
+            "action": "Generating INSTAGRAM message draft",
+            "model": "llama3:8b",
+            "prompt_preview": "You are a casual, engaging Instagram DM writer.\nWrite a cold Instagram DM to a VP at CloudScale Technologies \nSan Fr.\n\n\u2500\u2500\u2500 TONE PROFILE \u2500\u2500\u2500\n{\n  \"formality_level\": \"unknown\",\n  \"communication_style\": \"...",
+            "response_preview": "Here is a casual Instagram DM:\n\n{\n\"body\": \"Hey [VP's Name], \ud83d\udc4b I saw that CloudScale Technologies is working on some amazing stuff with Kubernetes and cloud-native tech. As someone who's passionate abo...",
+            "tokens_used": null,
+            "duration_ms": 129231,
+            "status": "success",
+            "error_message": null
+          },
+          {
+            "id": "09b973ca-3979-44f6-82d3-7708bd18b432",
+            "timestamp": "2026-02-10T08:06:55.013406Z",
+            "stage": "drafting",
+            "agent": "draft_linkedin_agent",
+            "action": "Generating LINKEDIN message draft",
+            "model": "llama3:8b",
+            "prompt_preview": "You are a LinkedIn DM expert.\nWrite a cold LinkedIn DM to a VP at CloudScale Technologies \nSan Fr.\n\n\u2500\u2500\u2500 TONE PROFILE \u2500\u2500\u2500\n{\n  \"formality_level\": \"unknown\",\n  \"communication_style\": \"{\\n  \\\"formality_le...",
+            "response_preview": "Here is the cold LinkedIn DM:\n\n{\n\"body\": \"Hi [VP's Name], \ud83d\ude4b\u200d\u2642\ufe0f I came across CloudScale Technologies and was impressed by the innovative work you're doing in cloud-native technologies. As someone who'...",
+            "tokens_used": null,
+            "duration_ms": 74372,
+            "status": "success",
+            "error_message": null
+          },
+          {
+            "id": "f67517da-5a4f-46f3-9be0-b8d1407d6a0d",
+            "timestamp": "2026-02-10T08:06:27.023487Z",
+            "stage": "drafting",
+            "agent": "draft_sms_agent",
+            "action": "Generating SMS message draft",
+            "model": "llama3:8b",
+            "prompt_preview": "You are a concise, friendly SMS copywriter.\nWrite a cold SMS to a professional at CloudScale Technologies \nSan Fr who works as a VP.\n\n\u2500\u2500\u2500 TONE PROFILE \u2500\u2500\u2500\n{\n  \"formality_level\": \"unknown\",\n  \"communic...",
+            "response_preview": "Here is a cold SMS to the VP at CloudScale Technologies:\n\n{\n  \"body\": \"Hi VP, \ud83d\udc4b I'm [Your Name], excited about CloudScale's innovative work in distributed systems. Would love to discuss how our expert...",
+            "tokens_used": null,
+            "duration_ms": 46389,
+            "status": "success",
+            "error_message": null
+          },
+          {
+            "id": "0f8c2792-fe60-4d5e-be42-f84e9b92138a",
+            "timestamp": "2026-02-10T08:06:05.174579Z",
+            "stage": "drafting",
+            "agent": "draft_whatsapp_agent",
+            "action": "Generating WHATSAPP message draft",
+            "model": "llama3:8b",
+            "prompt_preview": "You are a friendly, concise WhatsApp message writer.\nWrite a cold WhatsApp message to a VP at CloudScale Technologies \nSan Fr.\n\n\u2500\u2500\u2500 TONE PROFILE \u2500\u2500\u2500\n{\n  \"formality_level\": \"unknown\",\n  \"communication_...",
+            "response_preview": "Here is a cold WhatsApp message to a VP at CloudScale Technologies in San Francisco:\n\n{\n\"body\": \"Hey David \ud83d\udc4b, hope you're doing well! I came across CloudScale and was impressed by the innovative work ...",
+            "tokens_used": null,
+            "duration_ms": 24540,
+            "status": "success",
+            "error_message": null
+          },
+          {
+            "id": "f97201c8-0cd1-4a15-a5aa-14565f2e6a18",
+            "timestamp": "2026-02-10T08:09:06.530680Z",
+            "stage": "scoring",
+            "agent": "scoring_agent",
+            "action": "Evaluating 5 drafts for quality and personalization",
+            "model": "llama3:8b",
+            "prompt_preview": "You are a cold-outreach quality judge.\n\nScore each of the following drafts on a scale of 0-10 based on:\n  \u2022 Personalisation  (does it feel tailored, not generic?)\n  \u2022 Tone match       (does it match t...",
+            "response_preview": "Here is the output:\n\n[\n  {\n    \"channel\": \"email\",\n    \"score\": 8.5,\n    \"rationale\": \"The email draft feels personalized, with a clear connection to CloudScale Technologies' work on distributed syste...",
+            "tokens_used": null,
+            "duration_ms": 76278,
+            "status": "success",
+            "error_message": null
+          }
+        ],
+        "stages": [
+          {
+            "name": "ingestion",
+            "started_at": "2026-02-10T08:04:49.634149Z",
+            "completed_at": "2026-02-10T08:04:49.782456Z",
+            "duration_ms": 148,
+            "status": "completed"
+          },
+          {
+            "name": "ingestion",
+            "started_at": "2026-02-10T08:04:49.634149Z",
+            "completed_at": "2026-02-10T08:04:49.782456Z",
+            "duration_ms": 148,
+            "status": "completed"
+          },
+          {
+            "name": "persona",
+            "started_at": "2026-02-10T08:04:49.797572Z",
+            "completed_at": "2026-02-10T08:05:39.694682Z",
+            "duration_ms": 49897,
+            "status": "completed"
+          },
+          {
+            "name": "scoring",
+            "started_at": "2026-02-10T08:07:49.872877Z",
+            "completed_at": "2026-02-10T08:09:06.531241Z",
+            "duration_ms": 76658,
+            "status": "completed"
+          }
+        ],
+        "status": "scored",
+        "updated_at": "2026-02-10T08:09:06.531241Z"
+      },
+      "created_at": "2026-02-10T08:04:49.599710Z",
+      "updated_at": "2026-02-10T08:09:06.533965Z",
+      "stages": {
+        "ingestion": {
+          "status": "completed",
+          "message": "Ingestion completed",
+          "timestamp": "2026-02-10 08:04:49.794765"
+        },
+        "persona": {
+          "status": "completed",
+          "message": "Persona completed",
+          "timestamp": "2026-02-10 08:05:39.694682"
+        },
+        "drafting": {
+          "status": "completed",
+          "message": "Drafting completed",
+          "timestamp": "2026-02-10 08:07:49.872877"
+        },
+        "scoring": {
+          "status": "completed",
+          "message": "Scoring completed",
+          "timestamp": "2026-02-10 08:09:06.533965"
+        },
+        "approval": {
+          "status": "pending",
+          "message": ""
+        },
+        "execution": {
+          "status": "pending",
+          "message": ""
+        },
+        "persistence": {
+          "status": "pending",
+          "message": ""
+        },
+        "draft_whatsapp": {
+          "status": "completed",
+          "message": "Draft_whatsapp completed",
+          "timestamp": "2026-02-10 08:06:05.178970"
+        }
+      }
+    }
+  ]
+}
