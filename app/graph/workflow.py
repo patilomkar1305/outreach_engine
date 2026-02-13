@@ -15,18 +15,15 @@ Topology
     │
     ├──────────────────────────────┐
     ▼                              ▼
-  draft_email   draft_sms   draft_linkedin   draft_instagram
-    │               │              │                │
-    └───────────────┴──────────────┴────────────────┘
-                    │
-                    ▼
-                 scoring        (score all 4 drafts in one call)
+  draft_email   draft_sms   draft_linkedin   draft_instagram   draft_whatsapp
+    │               │              │                │               │
+    └───────────────┴──────────────┴────────────────┴───────────────┘
                     │
                     ▼
                  approval       (human-in-the-loop – interrupt / CLI)
                     │
-                    ├── regen requested?  ──► back to the specific draft node(s)
-                    │                          then scoring → approval again
+                    ├── regen requested?  ──► back to regen_drafts node
+                    │                          then approval again
                     ▼
                  execution      (Gmail / Twilio / mock)
                     │
@@ -40,7 +37,7 @@ Regen loop
 ──────────
 After approval, if state["regen_channels"] is non-empty, the
 `_needs_regen` router sends us back to a "regen_drafts" node that
-re-runs only the flagged channels, then back to scoring → approval.
+re-runs only the flagged channels, then back to approval.
 A max-regen counter prevents infinite loops.
 """
 
@@ -61,7 +58,6 @@ from app.agents.draft_agents                import (
     draft_whatsapp_node,
     _generate_draft,                            # reused by regen
 )
-from app.agents.scoring_agent               import scoring_node
 from app.agents.approval_and_persistence    import approval_node, persistence_node
 from app.agents.execution_agent             import execution_node
 
@@ -78,6 +74,7 @@ def regen_drafts_node(state: OutreachState) -> OutreachState:
     """
     Reads state["regen_channels"] and regenerates those drafts in place.
     Clears regen_channels afterwards so the next approval pass is clean.
+    Preserves version history and increments regenerate_count.
     """
     regen_channels = state.get("regen_channels", [])
     logger.info("REGEN: channels=%s", regen_channels)
@@ -86,11 +83,20 @@ def regen_drafts_node(state: OutreachState) -> OutreachState:
     new_llm_actions = []
     for d in state.get("drafts", []):
         if d["channel"] in regen_channels:
+            # Track version from old draft
+            old_version = d.get("version", 1)
+            old_regen_count = d.get("regenerate_count", 0)
+            
             # Re-generate this draft
             new_draft, llm_action = _generate_draft(d["channel"], state)
+            
+            # Carry forward version tracking
+            new_draft["version"] = old_version + 1
+            new_draft["regenerate_count"] = old_regen_count + 1
+            
             updated_drafts.append(new_draft)
             new_llm_actions.append(llm_action)
-            logger.info("[%s] Regenerated.", d["channel"].upper())
+            logger.info("[%s] Regenerated (v%d).", d["channel"].upper(), new_draft["version"])
         else:
             updated_drafts.append(d)
 
@@ -144,7 +150,6 @@ def build_graph():
     graph.add_node("draft_instagram",draft_instagram_node)
     graph.add_node("draft_whatsapp", draft_whatsapp_node)
 
-    graph.add_node("scoring",        scoring_node)
     graph.add_node("approval",       approval_node)
     graph.add_node("regen_drafts",   regen_drafts_node)
     graph.add_node("execution",      execution_node)
@@ -163,15 +168,12 @@ def build_graph():
     graph.add_edge("persona",        "draft_instagram")
     graph.add_edge("persona",        "draft_whatsapp")
 
-    # All 5 draft nodes → scoring  (fan-in)
-    graph.add_edge("draft_email",    "scoring")
-    graph.add_edge("draft_sms",      "scoring")
-    graph.add_edge("draft_linkedin", "scoring")
-    graph.add_edge("draft_instagram","scoring")
-    graph.add_edge("draft_whatsapp", "scoring")
-
-    # scoring → approval
-    graph.add_edge("scoring",    "approval")
+    # All 5 draft nodes → approval  (fan-in, skipping scoring)
+    graph.add_edge("draft_email",    "approval")
+    graph.add_edge("draft_sms",      "approval")
+    graph.add_edge("draft_linkedin", "approval")
+    graph.add_edge("draft_instagram","approval")
+    graph.add_edge("draft_whatsapp", "approval")
 
     # approval → conditional: regen_drafts OR execution
     graph.add_conditional_edges(
@@ -183,8 +185,8 @@ def build_graph():
         },
     )
 
-    # regen_drafts → scoring  (re-score the fresh drafts)
-    graph.add_edge("regen_drafts", "scoring")
+    # regen_drafts → approval  (re-review the fresh drafts, no scoring)
+    graph.add_edge("regen_drafts", "approval")
 
     # execution → persistence → END
     graph.add_edge("execution",   "persistence")

@@ -14,17 +14,18 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
     async_sessionmaker,
 )
-from sqlalchemy.pool import NullPool
 
 from app.config import settings
 
 # ---------------------------------------------------------------------------
-# Engine  (NullPool keeps it simple for a single-process CLI tool)
+# Engine  (AsyncAdaptedQueuePool is the default for async engines)
 # ---------------------------------------------------------------------------
 engine = create_async_engine(
     settings.postgres.async_url,
-    pool_class=NullPool,
     echo=False,
+    pool_pre_ping=True,          # validate connections before use
+    pool_size=5,
+    max_overflow=10,
 )
 
 # ---------------------------------------------------------------------------

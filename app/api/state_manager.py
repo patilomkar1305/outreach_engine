@@ -31,20 +31,32 @@ class StateManager:
         
         # Load existing sessions from disk
         self._load_sessions()
-    
+
     def _load_sessions(self):
         """Load all sessions from disk on startup."""
         try:
             for session_file in SESSIONS_DIR.glob("*.json"):
-                with open(session_file, "r") as f:
-                    session_data = json.load(f)
-                    session_id = session_data.get("session_id")
-                    if session_id:
-                        self.sessions[session_id] = session_data
-                        # Recreate campaigns from session
-                        for campaign in session_data.get("campaigns", []):
-                            self.campaigns[campaign["id"]] = campaign
-                        logger.info(f"Loaded session {session_id} with {len(session_data.get('campaigns', []))} campaigns")
+                # Auto-delete corrupt oversized files (>100MB is certainly broken)
+                file_size = session_file.stat().st_size
+                if file_size > 100 * 1024 * 1024:
+                    logger.warning(
+                        f"Deleting corrupt oversized session file {session_file.name} "
+                        f"({file_size / 1024 / 1024:.1f} MB)"
+                    )
+                    session_file.unlink(missing_ok=True)
+                    continue
+                try:
+                    with open(session_file, "r") as f:
+                        session_data = json.load(f)
+                        session_id = session_data.get("session_id")
+                        if session_id:
+                            self.sessions[session_id] = session_data
+                            # Recreate campaigns from session
+                            for campaign in session_data.get("campaigns", []):
+                                self.campaigns[campaign["id"]] = campaign
+                            logger.info(f"Loaded session {session_id} with {len(session_data.get('campaigns', []))} campaigns")
+                except (json.JSONDecodeError, KeyError) as e:
+                    logger.warning(f"Skipping corrupt session file {session_file.name}: {e}")
         except Exception as e:
             logger.error(f"Failed to load sessions: {e}")
     
@@ -149,7 +161,6 @@ class StateManager:
                 "ingestion": {"status": "pending", "message": ""},
                 "persona": {"status": "pending", "message": ""},
                 "drafting": {"status": "pending", "message": ""},
-                "scoring": {"status": "pending", "message": ""},
                 "approval": {"status": "pending", "message": ""},
                 "execution": {"status": "pending", "message": ""},
                 "persistence": {"status": "pending", "message": ""},
@@ -197,36 +208,91 @@ class StateManager:
                 "message": message,
                 "timestamp": now.isoformat() + "Z"
             }
-            asyncio.create_task(self._broadcast_event(campaign_id, event))
-    
-    def update_state(self, campaign_id: str, state: dict[str, Any]):
-        """Update the full LangGraph state."""
-        if campaign_id in self.campaigns:
-            now = datetime.utcnow()
-            self.campaigns[campaign_id]["state"] = state
-            self.campaigns[campaign_id]["status"] = state.get("status", "running")
-            self.campaigns[campaign_id]["updated_at"] = now.isoformat() + "Z"
-            
-            # Update session
-            session_id = self.campaigns[campaign_id].get("session_id")
-            if session_id:
-                self.sessions[session_id]["updated_at"] = now.isoformat() + "Z"
-                # Update the campaign in session's campaigns list
-                for i, c in enumerate(self.sessions[session_id]["campaigns"]):
-                    if c["id"] == campaign_id:
-                        self.sessions[session_id]["campaigns"][i] = self.campaigns[campaign_id]
-                        break
-                self._save_session(session_id)
-            
-            # Broadcast LLM actions if any
-            llm_actions = state.get("llm_actions", [])
-            if llm_actions:
-                event = {
-                    "type": "llm_actions_update",
-                    "actions": llm_actions,
-                    "timestamp": now.isoformat() + "Z"
-                }
+            try:
                 asyncio.create_task(self._broadcast_event(campaign_id, event))
+            except RuntimeError:
+                # Not in async context - skip broadcast
+                pass
+    
+    # Fields that accumulate via Annotated[list, add] in LangGraph state
+    _LIST_MERGE_FIELDS = {"drafts", "llm_actions", "stages", "execution_results"}
+
+    def update_state(self, campaign_id: str, partial_state: dict[str, Any]):
+        """
+        Merge partial node output into the campaign state.
+        
+        List fields (drafts, llm_actions, stages, execution_results) are
+        EXTENDED with deduplication by 'id' or 'name' — matching the
+        Annotated[list, add] reducer in LangGraph's internal state.
+        All other fields are overwritten.
+        """
+        if campaign_id not in self.campaigns:
+            return
+
+        now = datetime.utcnow()
+        existing_state = self.campaigns[campaign_id].get("state", {})
+
+        for key, value in partial_state.items():
+            if key in self._LIST_MERGE_FIELDS and isinstance(value, list):
+                existing_list = existing_state.get(key, [])
+                # Build set of existing identifiers to avoid duplicates
+                existing_ids: set[str] = set()
+                for item in existing_list:
+                    if isinstance(item, dict):
+                        item_id = item.get("id") or item.get("name")
+                        if item_id:
+                            existing_ids.add(item_id)
+                # Append only genuinely new items
+                # IMPORTANT: iterate over a snapshot of `value` in case it
+                # is the same list object as `existing_list` (same-object ref)
+                new_items = list(value)  # snapshot copy
+                for item in new_items:
+                    if isinstance(item, dict):
+                        item_id = item.get("id") or item.get("name")
+                        if item_id and item_id not in existing_ids:
+                            existing_list.append(item)
+                            existing_ids.add(item_id)
+                        elif not item_id:
+                            # For items without an id, check if they already
+                            # exist in the list to avoid unbounded growth
+                            if item not in existing_list:
+                                existing_list.append(item)
+                    else:
+                        if item not in existing_list:
+                            existing_list.append(item)
+                existing_state[key] = existing_list
+            else:
+                # Scalar / dict fields → overwrite
+                existing_state[key] = value
+
+        self.campaigns[campaign_id]["state"] = existing_state
+        self.campaigns[campaign_id]["status"] = existing_state.get("status", "running")
+        self.campaigns[campaign_id]["updated_at"] = now.isoformat() + "Z"
+
+        # Update session
+        session_id = self.campaigns[campaign_id].get("session_id")
+        if session_id:
+            self.sessions[session_id]["updated_at"] = now.isoformat() + "Z"
+            # Update the campaign in session's campaigns list
+            for i, c in enumerate(self.sessions[session_id]["campaigns"]):
+                if c["id"] == campaign_id:
+                    self.sessions[session_id]["campaigns"][i] = self.campaigns[campaign_id]
+                    break
+            self._save_session(session_id)
+
+        # Broadcast LLM actions if any new ones arrived
+        new_actions = partial_state.get("llm_actions", [])
+        if new_actions:
+            event = {
+                "type": "llm_actions_update",
+                "actions": existing_state.get("llm_actions", []),
+                "timestamp": now.isoformat() + "Z"
+            }
+            try:
+                asyncio.create_task(self._broadcast_event(campaign_id, event))
+            except RuntimeError:
+                # Not in async context - skip broadcast
+                pass
     
     async def _broadcast_event(self, campaign_id: str, event: dict[str, Any]):
         """Broadcast event to all subscribers."""

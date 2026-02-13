@@ -34,19 +34,30 @@ def _get_llm() -> OllamaLLM:
         _llm = OllamaLLM(
             model=settings.ollama.model,
             base_url=settings.ollama.base_url,
-            temperature=0.1,        # very low – scoring should be deterministic
-            num_predict=768,
+            temperature=0.05,       # near-zero for consistent scoring
+            num_predict=1024,
+            repeat_penalty=1.1,
         )
     return _llm
 
 
-_SCORING_PROMPT = """You are a cold-outreach quality judge.
+_SCORING_PROMPT = """You are a strict cold-outreach quality judge. Be CRITICAL and honest.
 
 Score each of the following drafts on a scale of 0-10 based on:
-  • Personalisation  (does it feel tailored, not generic?)
-  • Tone match       (does it match the persona's style?)
+  • Personalisation  (does it use the person's real name? does it feel tailored, not generic?)
+  • Tone match       (does it match the persona's communication style?)
   • CTA clarity      (is the call-to-action clear and compelling?)
   • Natural writing  (does it sound human, not AI-generated?)
+  • Specificity      (does it reference specific details from their profile?)
+
+Be strict:
+  - Score 9-10: Exceptionally personalised, references specific details, perfect tone
+  - Score 7-8: Good personalisation, mostly matches tone, clear CTA
+  - Score 5-6: Average, somewhat generic, some personalisation
+  - Score 3-4: Mostly generic, wrong tone, unclear CTA
+  - Score 0-2: Completely generic or inappropriate
+
+Most cold outreach drafts should score between 5-8. Reserve 9-10 for truly exceptional work.
 
 ─── PERSONA TONE ───
 {tone_summary}
@@ -62,7 +73,7 @@ No markdown. No explanation outside the JSON.
   {{
     "channel": "<channel name>",
     "score": <0-10 float>,
-    "rationale": "<1-2 sentences explaining the score>"
+    "rationale": "<1-2 sentences explaining the score with specific feedback>"
   }},
   ...
 ]

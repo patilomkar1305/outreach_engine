@@ -35,14 +35,14 @@ class PostgresSettings(BaseSettings):
             f"@{self.host}:{self.port}/{self.db}"
         )
 
-    model_config = {"env_prefix": "POSTGRES_"}
+    model_config = {"env_prefix": "POSTGRES_", "env_file": ".env", "extra": "ignore"}
 
 
 class OllamaSettings(BaseSettings):
     base_url: str = "http://localhost:11434"
     model:    str = "llama3:8b"
 
-    model_config = {"env_prefix": "OLLAMA_"}
+    model_config = {"env_prefix": "OLLAMA_", "env_file": ".env", "extra": "ignore"}
 
 
 class ChromaSettings(BaseSettings):
@@ -50,14 +50,14 @@ class ChromaSettings(BaseSettings):
     port:       int = 8000
     collection: str = "outreach_personas"
 
-    model_config = {"env_prefix": "CHROMADB_"}
+    model_config = {"env_prefix": "CHROMADB_", "env_file": ".env", "extra": "ignore"}
 
 
 class GmailSettings(BaseSettings):
     credentials_path: str = "./credentials.json"
     token_path:       str = "./token.json"
 
-    model_config = {"env_prefix": "GMAIL_"}
+    model_config = {"env_prefix": "GMAIL_", "env_file": ".env", "extra": "ignore"}
 
 
 class TwilioSettings(BaseSettings):
@@ -65,7 +65,7 @@ class TwilioSettings(BaseSettings):
     auth_token:   str = ""
     from_number:  str = ""
 
-    model_config = {"env_prefix": "TWILIO_"}
+    model_config = {"env_prefix": "TWILIO_", "env_file": ".env", "extra": "ignore"}
 
 
 # ---------------------------------------------------------------------------

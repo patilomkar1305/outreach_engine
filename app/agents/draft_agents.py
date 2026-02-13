@@ -42,8 +42,10 @@ def _get_llm() -> OllamaLLM:
         _llm = OllamaLLM(
             model=settings.ollama.model,
             base_url=settings.ollama.base_url,
-            temperature=0.7,        # higher than persona – we want creative here
-            num_predict=512,
+            temperature=0.65,        # balanced creativity with coherence
+            num_predict=800,         # enough room for detailed messages
+            top_p=0.9,               # nucleus sampling for diversity
+            repeat_penalty=1.15,     # reduce repetition
         )
     return _llm
 
@@ -60,24 +62,30 @@ def _get_llm() -> OllamaLLM:
 #   {similar_examples}  – drafts from similar past personas (if any)
 # ---------------------------------------------------------------------------
 
-_EMAIL_PROMPT = """You are a world-class cold-outreach copywriter.
-Write a cold EMAIL to a professional at {company} who works as a {role}.
+_EMAIL_PROMPT = """You are a world-class cold-outreach copywriter who writes emails that feel like they were hand-crafted by a thoughtful human.
+Write a cold EMAIL to {name}, a {role} at {company}.
 
 ─── TONE PROFILE (match this exactly) ───
 {tone_summary}
 
 ─── CONTEXT ───
+Target person: {name}
 Interests: {interests}
 Recent activity: {recent_activity}
 Past similar examples for reference:
 {similar_examples}
 
 ─── REQUIREMENTS ───
-• Subject line: compelling, personalised, under 60 chars.
-• Body: 3-5 short paragraphs. Natural, human, NOT corporate.
-• Mention their role / company / an interest naturally (no copy-paste feel).
-• End with ONE clear CTA (reply, book a call, check a link).
+• ALWAYS address them as "{first_name}" in the greeting – never use placeholders like [Name] or [First Name].
+• Subject line: compelling, personalised, under 60 chars. Reference them, their company, or something specific about them.
+• Body: 2-4 short paragraphs. Warm, genuine, conversational – NOT corporate or salesy.
+• Open with something specific about them – a recent achievement, their role, an interest, or something you genuinely admire. Make it feel like you actually looked them up.
+• Middle: briefly connect what you do to what they care about. Show value without being pushy.
+• End with ONE soft, low-pressure CTA – a quick chat, a reply, or checking something out. No "I'd love to schedule a 30-minute demo" energy.
+• Sound like a real person wrote this in 5 minutes because they were genuinely interested.
+• NEVER use placeholders like [Your Name], [Name], or [Company]. Sign off naturally – use a warm closing like "Cheers" or "Best" without a sender name.
 • Match the tone profile above precisely.
+• Use 1-2 relevant emojis where they enhance the message (e.g. in the subject line or sign-off). Keep it professional — emojis should feel natural, not forced.
 
 ─── OUTPUT FORMAT ───
 Return ONLY a JSON object (no markdown, no explanation):
@@ -87,23 +95,27 @@ Return ONLY a JSON object (no markdown, no explanation):
 }}
 """
 
-_SMS_PROMPT = """You are a concise, friendly SMS copywriter.
-Write a cold SMS to a professional at {company} who works as a {role}.
+_SMS_PROMPT = """You are a concise, friendly SMS copywriter who writes texts that feel personal, not automated.
+Write a cold SMS to {name}, a {role} at {company}.
 
 ─── TONE PROFILE ───
 {tone_summary}
 
 ─── CONTEXT ───
+Target person: {name}
 Interests: {interests}
 Recent activity: {recent_activity}
 Past similar examples:
 {similar_examples}
 
 ─── REQUIREMENTS ───
-• Max 160 characters (single SMS segment) if possible; 320 if needed.
-• Casual but professional. One sentence + one CTA.
-• Personalise with their role or company.
-• Match the tone.
+• ALWAYS use their first name "{first_name}" – never placeholders like [Name].
+• Max 160 characters (single SMS segment) if possible; absolutely no more than 320.
+• Casual but professional. Feel like a text from someone they'd want to reply to.
+• Reference something specific – their company, role, a recent achievement, or an interest. Don't be generic.
+• End with a soft, easy CTA – a reply, a quick call, checking something out.
+• Match the tone profile. Sound like a real person texting, not a marketing blast.
+• You may include 1 emoji if it fits naturally, but it's also fine to skip emojis entirely — SMS should feel short and human.
 
 ─── OUTPUT FORMAT ───
 Return ONLY a JSON object:
@@ -112,23 +124,27 @@ Return ONLY a JSON object:
 }}
 """
 
-_LINKEDIN_PROMPT = """You are a LinkedIn DM expert.
-Write a cold LinkedIn DM to a {role} at {company}.
+_LINKEDIN_PROMPT = """You are a LinkedIn DM expert who writes thoughtful, engaging connection messages.
+Write a cold LinkedIn DM to {name}, a {role} at {company}.
 
 ─── TONE PROFILE ───
 {tone_summary}
 
 ─── CONTEXT ───
+Target person: {name}
 Interests: {interests}
 Recent activity: {recent_activity}
 Past similar examples:
 {similar_examples}
 
 ─── REQUIREMENTS ───
-• 2-3 short paragraphs. Warm, professional, not salesy.
-• Reference something specific about them (role, company, interest).
-• End with a soft CTA (open a conversation, not a hard ask).
-• Sound like a real person wrote it in 2 minutes.
+• ALWAYS address them as "{first_name}" in the greeting – never use placeholders.
+• 3-4 paragraphs. Warm, professional, not salesy.
+• Open with a specific, genuine compliment about their work, a recent post, a company milestone, or something you admire about their career trajectory. Show you actually looked at their profile.
+• In the middle, briefly connect your work/interest to theirs. Share one concrete insight, observation, or question that demonstrates you understand their space. Make it a two-way conversation, not a pitch.
+• End with a soft, specific CTA – suggest a topic to discuss, a coffee chat, or exchanging perspectives on something relevant. Make it easy to say yes.
+• Sound like a real person who took 3-4 minutes to write a thoughtful message because they were genuinely interested.
+• Include 1-2 tasteful emojis where they add warmth (e.g. 👋 in the greeting, or a subtle one at the end). Keep it professional-friendly.
 
 ─── OUTPUT FORMAT ───
 Return ONLY a JSON object:
@@ -137,23 +153,27 @@ Return ONLY a JSON object:
 }}
 """
 
-_INSTAGRAM_PROMPT = """You are a casual, engaging Instagram DM writer.
-Write a cold Instagram DM to a {role} at {company}.
+_INSTAGRAM_PROMPT = """You are a casual, engaging Instagram DM writer who sounds like a real person, not a brand.
+Write a cold Instagram DM to {name}, a {role} at {company}.
 
 ─── TONE PROFILE ───
 {tone_summary}
 
 ─── CONTEXT ───
+Target person: {name}
 Interests: {interests}
 Recent activity: {recent_activity}
 Past similar examples:
 {similar_examples}
 
 ─── REQUIREMENTS ───
-• 1-2 short, punchy sentences. Very casual.
-• Reference something real about them.
-• End with an easy CTA (reply, check something out).
-• Use natural language – maybe an emoji or two if the tone allows.
+• ALWAYS use their first name "{first_name}" – never placeholders.
+• 2-3 short, punchy sentences. Casual, warm, platform-native.
+• Open with something specific about them – their content, work, an achievement, or a shared interest. Make it feel like you actually follow them.
+• Keep it conversational and genuine – Instagram DMs should feel like a real person sliding in, not a cold pitch.
+• End with an easy, low-pressure CTA – a reply, checking something out, or connecting further.
+• Use 2-4 emojis naturally throughout the message — Instagram DMs should feel expressive and engaging 🔥✨. Place them where they add energy or punctuate a point.
+• Sound like you wrote this in under a minute because you were genuinely interested.
 
 ─── OUTPUT FORMAT ───
 Return ONLY a JSON object:
@@ -162,24 +182,27 @@ Return ONLY a JSON object:
 }}
 """
 
-_WHATSAPP_PROMPT = """You are a friendly, concise WhatsApp message writer.
-Write a cold WhatsApp message to a {role} at {company}.
+_WHATSAPP_PROMPT = """You are a friendly, natural WhatsApp message writer who sounds like a real person reaching out genuinely.
+Write a cold WhatsApp message to {name}, a {role} at {company}.
 
 ─── TONE PROFILE ───
 {tone_summary}
 
 ─── CONTEXT ───
+Target person: {name}
 Interests: {interests}
 Recent activity: {recent_activity}
 Past similar examples:
 {similar_examples}
 
 ─── REQUIREMENTS ───
-• 2-3 short sentences max. Conversational and warm.
-• Personalise with their role, company, or an interest.
-• End with a soft CTA (reply, quick call, coffee chat).
-• Match the tone – can use emojis if appropriate.
-• Sound like a real WhatsApp message, not a formal letter.
+• ALWAYS use their first name "{first_name}" – never placeholders.
+• 2-3 short sentences max. Conversational, warm, like you're texting a new professional contact.
+• Open with something specific – reference their role, company, a recent achievement, or a shared interest. Show you know who they are.
+• Keep it personal and genuine – WhatsApp messages should feel like a real person reaching out, not a template.
+• End with a soft CTA – a reply, quick call, or coffee chat. Keep it low-pressure.
+• Use 2-3 emojis naturally — WhatsApp is a casual platform and emojis make messages feel warmer and more genuine 😊👋. Place them where they feel conversational.
+• Sound like you took 30 seconds to write this because you were genuinely excited about connecting.
 
 ─── OUTPUT FORMAT ───
 Return ONLY a JSON object:
@@ -201,6 +224,33 @@ CHANNEL_PROMPTS: dict[str, str] = {
 # Shared draft-generation logic
 # ---------------------------------------------------------------------------
 
+def _sanitize_json_newlines(s: str) -> str:
+    """Replace literal newlines inside JSON string values with \\n."""
+    result = []
+    in_string = False
+    escape = False
+    for ch in s:
+        if escape:
+            result.append(ch)
+            escape = False
+            continue
+        if ch == '\\' and in_string:
+            result.append(ch)
+            escape = True
+            continue
+        if ch == '"':
+            in_string = not in_string
+            result.append(ch)
+            continue
+        if in_string and ch == '\n':
+            result.append('\\n')
+            continue
+        if in_string and ch == '\r':
+            continue
+        result.append(ch)
+    return ''.join(result)
+
+
 def _extract_json(raw: str) -> dict[str, Any]:
     cleaned = raw.strip()
     cleaned = re.sub(r"^```(?:json)?", "", cleaned)
@@ -214,16 +264,74 @@ def _extract_json(raw: str) -> dict[str, Any]:
         if ch == "{":   depth += 1
         elif ch == "}": depth -= 1
         if depth == 0:  end = i + 1; break
-    return json.loads(cleaned[start:end])
+    json_str = cleaned[start:end]
+
+    # First try parsing as-is
+    try:
+        return json.loads(json_str)
+    except json.JSONDecodeError:
+        pass
+
+    # Fallback: fix literal newlines inside string values
+    fixed = _sanitize_json_newlines(json_str)
+    try:
+        return json.loads(fixed)
+    except json.JSONDecodeError:
+        pass
+
+    raise ValueError(f"Could not parse JSON from LLM output: {json_str[:200]}")
+
+
+def _extract_draft_fallback(raw: str, channel: str) -> dict[str, Any]:
+    """Fallback extraction when JSON parsing fails.
+    
+    Handles common LLM failures like unquoted body values, preamble text,
+    or slightly malformed JSON.
+    """
+    result: dict[str, Any] = {}
+
+    # Try to extract subject (email only) from "subject": "..." pattern
+    if channel == "email":
+        subject_match = re.search(r'"subject"\s*:\s*"((?:[^"\\]|\\.)*)"', raw)
+        if subject_match:
+            result["subject"] = subject_match.group(1)
+
+    # Try to extract body from "body":\s* pattern
+    body_match = re.search(r'"body"\s*:\s*"?(.*)', raw, re.DOTALL)
+    if body_match:
+        body = body_match.group(1)
+        # Remove trailing JSON artifacts
+        body = re.sub(r'\}\s*$', '', body)
+        body = body.strip().rstrip('"').strip()
+        if body:
+            result["body"] = body
+            return result
+
+    # Final fallback: strip common LLM preamble and JSON wrapper
+    cleaned = re.sub(
+        r'^(?:Here is|Here\'s|Below is|I\'ve written).*?:\s*\n+',
+        '', raw.strip(), flags=re.IGNORECASE
+    )
+    # Remove JSON wrapper if present
+    cleaned = re.sub(r'^\{[^}]*?"(?:body|subject)"\s*:\s*', '', cleaned, flags=re.DOTALL)
+    cleaned = re.sub(r'\}\s*$', '', cleaned).strip()
+    if cleaned:
+        result["body"] = cleaned[:2000]
+
+    return result
 
 
 def _generate_draft(channel: str, state: OutreachState) -> tuple[Draft, dict]:
     """Core logic shared by all channel nodes. Returns (draft, llm_action)."""
     tone = state.get("tone", {})
+    name     = state.get("target_name", "") or tone.get("name", "")
     company  = state.get("company", "their company")
     role     = state.get("role", "a professional")
     interests = ", ".join(tone.get("interests", []) or ["general topics"])
     recent   = tone.get("recent_activity_summary", "")
+
+    # Derive first name from full name
+    first_name = name.split()[0] if name else "there"
 
     # Pull drafts from similar past personas as examples
     similar_examples = ""
@@ -236,6 +344,8 @@ def _generate_draft(channel: str, state: OutreachState) -> tuple[Draft, dict]:
 
     prompt = CHANNEL_PROMPTS[channel].format(
         tone_summary=json.dumps(tone, indent=2),
+        name=name or "the target",
+        first_name=first_name,
         company=company,
         role=role,
         interests=interests,
@@ -255,10 +365,15 @@ def _generate_draft(channel: str, state: OutreachState) -> tuple[Draft, dict]:
     try:
         parsed = _extract_json(raw_output)
     except (ValueError, json.JSONDecodeError) as exc:
-        logger.error("[%s] JSON parse failed: %s", channel.upper(), exc)
-        parse_status = "error"
+        logger.warning("[%s] JSON parse failed, trying fallback: %s", channel.upper(), exc)
+        parse_status = "fallback"
         parse_error = str(exc)
-        parsed = {"body": raw_output.strip()[:1000]}
+        parsed = _extract_draft_fallback(raw_output, channel)
+        if parsed.get("body"):
+            parse_status = "success"  # fallback worked
+            parse_error = None
+        else:
+            parse_status = "error"
 
     # Create LLM action record
     action_id = str(uuid.uuid4())

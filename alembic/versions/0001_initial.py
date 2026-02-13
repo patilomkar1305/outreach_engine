@@ -18,8 +18,7 @@ depends_on = None
 
 
 def upgrade():
-    # Enable pgvector extension (needed for future embedding columns if desired)
-    op.execute("CREATE EXTENSION IF NOT EXISTS vector")
+    # NOTE: pgvector is NOT needed – vectors are stored in ChromaDB.
 
     # ── target_profiles ────────────────────────────────────────────────
     op.create_table(

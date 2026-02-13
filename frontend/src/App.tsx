@@ -49,6 +49,9 @@ interface PersonaInfo {
   industry?: string;
   seniority?: string;
   communication_style?: string;
+  formality_level?: string;
+  tone_keywords?: string[];
+  language_hints?: string;
   key_interests: string[];
 }
 
@@ -86,7 +89,6 @@ const STAGE_CONFIG = [
   { key: 'ingestion', label: 'Data Ingestion', icon: '📥', description: 'Extracting profile data' },
   { key: 'persona', label: 'Persona Analysis', icon: '🎯', description: 'Understanding communication style' },
   { key: 'drafting', label: 'Draft Generation', icon: '✍️', description: 'Creating personalized messages' },
-  { key: 'scoring', label: 'Quality Scoring', icon: '⭐', description: 'Evaluating message quality' },
   { key: 'approval', label: 'Human Review', icon: '👤', description: 'Your approval needed' },
   { key: 'execution', label: 'Message Sending', icon: '🚀', description: 'Sending approved messages' },
   { key: 'persistence', label: 'Data Storage', icon: '💾', description: 'Saving campaign data' },
@@ -306,14 +308,6 @@ function DraftCard({
   choice: 'approve' | 'regen' | 'skip' | null;
   onChoiceChange: (choice: 'approve' | 'regen' | 'skip') => void;
 }) {
-  const getScoreColor = (score?: number) => {
-    if (!score) return 'gray';
-    if (score >= 8) return 'excellent';
-    if (score >= 6) return 'good';
-    if (score >= 4) return 'fair';
-    return 'poor';
-  };
-
   return (
     <div className={`draft-card ${choice || ''} ${draft.sent ? 'sent' : ''}`}>
       <div className="draft-header">
@@ -327,13 +321,6 @@ function DraftCard({
             <span className="regen-badge">↻{draft.regenerate_count}</span>
           )}
         </div>
-        
-        {draft.score !== undefined && draft.score !== null && (
-          <div className={`score-badge ${getScoreColor(draft.score)}`}>
-            <span className="score-value">{draft.score.toFixed(1)}</span>
-            <span className="score-max">/10</span>
-          </div>
-        )}
       </div>
 
       {draft.subject && (
@@ -346,14 +333,7 @@ function DraftCard({
         {draft.body}
       </div>
 
-      {draft.score_rationale && (
-        <div className="score-rationale">
-          <span className="rationale-icon">💡</span>
-          <span className="rationale-text">{draft.score_rationale}</span>
-        </div>
-      )}
-
-      {!draft.sent && (
+      {!draft.sent && !draft.approved && (
         <div className="draft-actions">
           <button 
             className={`action-btn approve ${choice === 'approve' ? 'selected' : ''}`}
@@ -376,6 +356,12 @@ function DraftCard({
         </div>
       )}
 
+      {draft.approved && !draft.sent && (
+        <div className="approved-indicator">
+          ✓ Approved
+        </div>
+      )}
+
       {draft.sent && (
         <div className="sent-indicator">
           ✓ Message Sent
@@ -393,7 +379,13 @@ function PersonaCard({ persona, company, role }: { persona?: PersonaInfo; compan
     <div className="persona-card">
       <h3>🎯 Target Persona</h3>
       <div className="persona-details">
-        {(persona?.name || company) && (
+        {persona?.name && (
+          <div className="persona-row">
+            <span className="label">Name:</span>
+            <span className="value">{persona.name}</span>
+          </div>
+        )}
+        {(persona?.company || company) && (
           <div className="persona-row">
             <span className="label">Company:</span>
             <span className="value">{persona?.company || company}</span>
@@ -421,6 +413,28 @@ function PersonaCard({ persona, company, role }: { persona?: PersonaInfo; compan
           <div className="persona-row">
             <span className="label">Style:</span>
             <span className="value">{persona.communication_style}</span>
+          </div>
+        )}
+        {persona?.formality_level && (
+          <div className="persona-row">
+            <span className="label">Formality:</span>
+            <span className="value formality-badge">{persona.formality_level}</span>
+          </div>
+        )}
+        {persona?.language_hints && (
+          <div className="persona-row">
+            <span className="label">Language cues:</span>
+            <span className="value">{persona.language_hints}</span>
+          </div>
+        )}
+        {persona?.tone_keywords && persona.tone_keywords.length > 0 && (
+          <div className="persona-interests">
+            <span className="label">Tone:</span>
+            <div className="interest-tags">
+              {persona.tone_keywords.map((kw, idx) => (
+                <span key={idx} className="interest-tag tone-tag">{kw}</span>
+              ))}
+            </div>
           </div>
         )}
         {persona?.key_interests && persona.key_interests.length > 0 && (
@@ -486,32 +500,14 @@ function App() {
   };
 
   const handleNewSession = async () => {
-    try {
-      const response = await fetch(`${API_BASE}/api/v1/sessions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({})
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setActiveSessionId(data.session_id);
-        loadSessions();
-      }
-    } catch (error) {
-      // Create local session for demo mode
-      const newSession: SessionSummary = {
-        session_id: 'local-' + Date.now(),
-        name: `Session ${sessions.length + 1}`,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        campaign_count: 0,
-      };
-      setSessions(prev => [newSession, ...prev]);
-      setActiveSessionId(newSession.session_id);
-    }
-    // Reset campaign state for new session
+    // Just reset local state – session will be created by backend
+    // when the first campaign is launched, avoiding empty sessions
+    setActiveSessionId(null);
     setCampaign(null);
     setApprovalChoices({});
+    setUrlInput('');
+    setTextInput('');
+    setFile(null);
   };
 
   const handleSelectSession = async (sessionId: string) => {
@@ -587,7 +583,12 @@ function App() {
         const formData = new FormData();
         formData.append('file', file);
         
-        response = await fetch(`${API_BASE}/api/v1/campaigns/upload`, {
+        // Pass session_id as query param so the upload endpoint can reuse it
+        const uploadUrl = activeSessionId
+          ? `${API_BASE}/api/v1/campaigns/upload?session_id=${encodeURIComponent(activeSessionId)}`
+          : `${API_BASE}/api/v1/campaigns/upload`;
+        
+        response = await fetch(uploadUrl, {
           method: 'POST',
           body: formData  // Don't set Content-Type header - browser will set it with boundary
         });
@@ -651,8 +652,6 @@ function App() {
             channel: 'email',
             subject: 'Exciting opportunity at our growing startup',
             body: 'Hi there!\n\nI noticed your impressive background in software engineering at TechCorp Inc. We\'re building something revolutionary in the AI space and would love to chat about how your expertise could help shape our product.\n\nWould you be open to a quick 15-minute call this week?\n\nBest regards,\nSarah',
-            score: 8.5,
-            score_rationale: 'Strong personalization with role reference, clear CTA, appropriate tone',
             approved: false,
             sent: false,
             version: 1,
@@ -663,8 +662,6 @@ function App() {
             channel: 'linkedin',
             subject: '',
             body: 'Hey! Loved your recent post about microservices architecture. We\'re tackling similar challenges at scale and I think you\'d find our approach interesting. Would you be open to connecting?',
-            score: 7.8,
-            score_rationale: 'Good reference to interests, could be more specific about value proposition',
             approved: false,
             sent: false,
             version: 1,
@@ -675,8 +672,6 @@ function App() {
             channel: 'whatsapp',
             subject: '',
             body: 'Hi! 👋 Quick intro - I\'m Sarah from AI Innovations. Saw your profile and think you\'d be amazing for what we\'re building. Free for a quick call this week?',
-            score: 7.5,
-            score_rationale: 'Friendly tone, could use more personalization',
             approved: false,
             sent: false,
             version: 1,
@@ -687,8 +682,6 @@ function App() {
             channel: 'sms',
             subject: '',
             body: 'Hi! Quick intro - Sarah from AI Innovations. Your background is perfect for what we\'re building. Coffee chat this week?',
-            score: 6.9,
-            score_rationale: 'Concise but generic, could mention specific skills',
             approved: false,
             sent: false,
             version: 1,
@@ -699,8 +692,6 @@ function App() {
             channel: 'instagram',
             subject: '',
             body: 'Hey! 👋 Love your content on tech and innovation. We\'re building something cool in AI and would love to get your thoughts. DM me if interested!',
-            score: 7.2,
-            score_rationale: 'Casual, platform-appropriate, but lacks specific hook',
             approved: false,
             sent: false,
             version: 1,
@@ -744,24 +735,11 @@ function App() {
             duration_ms: 2890,
             status: 'success',
           },
-          {
-            id: 'action-4',
-            timestamp: new Date(Date.now() - 15000).toISOString(),
-            stage: 'scoring',
-            agent: 'scoring_agent',
-            action: 'Evaluating 5 drafts for quality and personalization',
-            model: 'mistral',
-            prompt_preview: 'You are a cold-outreach quality judge...',
-            response_preview: '[{"channel": "email", "score": 8.5, "rationale": "Strong..."}]',
-            duration_ms: 4100,
-            status: 'success',
-          },
         ],
         stages: [
           { name: 'ingestion', started_at: new Date(Date.now() - 35000).toISOString(), completed_at: new Date(Date.now() - 30000).toISOString(), duration_ms: 5000, status: 'completed' },
           { name: 'persona', started_at: new Date(Date.now() - 30000).toISOString(), completed_at: new Date(Date.now() - 25000).toISOString(), duration_ms: 5000, status: 'completed' },
           { name: 'drafting', started_at: new Date(Date.now() - 25000).toISOString(), completed_at: new Date(Date.now() - 15000).toISOString(), duration_ms: 10000, status: 'completed' },
-          { name: 'scoring', started_at: new Date(Date.now() - 15000).toISOString(), completed_at: new Date(Date.now() - 10000).toISOString(), duration_ms: 5000, status: 'completed' },
           { name: 'approval', started_at: new Date(Date.now() - 10000).toISOString(), status: 'running' },
         ],
       };
@@ -791,47 +769,82 @@ function App() {
       .filter(([_, action]) => action === 'skip')
       .map(([channel]) => channel);
 
-    // Apply choices locally
-    const updatedDrafts = campaign.drafts.map(d => {
-      if (approved.includes(d.channel)) {
-        return { ...d, approved: true };
-      }
-      if (regen.includes(d.channel)) {
-        const timestamp = new Date().toLocaleTimeString();
-        const newBody = `Regenerated (${timestamp}):\n\n${d.body.split('\n').slice(0, 2).join('\n')}\n\nWanted to follow up with a fresher outreach tone — would you be open to a brief call?\n\nBest,\nSarah`;
-        const newScore = Math.max(5 + Math.random() * 4, 5);
-        return { 
-          ...d, 
-          body: newBody, 
-          score: parseFloat(newScore.toFixed(1)), 
-          score_rationale: 'Regenerated with new approach',
-          version: d.version + 1,
-          regenerate_count: d.regenerate_count + 1,
-          approved: false 
-        };
-      }
-      return d;
-    }).filter(d => !skipped.includes(d.channel));
+    // If there are regen requests, mark those drafts as regenerating in the UI
+    // but let the backend handle actual regeneration
+    if (regen.length > 0) {
+      // Optimistic UI: mark regen drafts as loading, remove skipped
+      const updatedDrafts = campaign.drafts
+        .filter(d => !skipped.includes(d.channel))
+        .map(d => {
+          if (regen.includes(d.channel)) {
+            return { ...d, approved: false };
+          }
+          if (approved.includes(d.channel)) {
+            return { ...d, approved: true };
+          }
+          return d;
+        });
+      setCampaign(prev => prev ? { ...prev, drafts: updatedDrafts, current_stage: 'drafting' } : prev);
+    } else {
+      // All approved/skipped - mark approved and move to execution
+      const updatedDrafts = campaign.drafts
+        .filter(d => !skipped.includes(d.channel))
+        .map(d => {
+          if (approved.includes(d.channel)) {
+            return { ...d, approved: true };
+          }
+          return d;
+        });
+      setCampaign(prev => prev ? { ...prev, drafts: updatedDrafts } : prev);
+    }
 
-    setCampaign(prev => prev ? { ...prev, drafts: updatedDrafts } : prev);
     setApprovalChoices({});
 
-    // Try to notify backend
+    // Notify backend to resume workflow
     try {
-      await fetch(`${API_BASE}/api/v1/campaigns/${campaign.campaign_id}/approve`, {
+      const response = await fetch(`${API_BASE}/api/v1/campaigns/${campaign.campaign_id}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ approved, regen, skipped }),
       });
-      pollCampaignStatus(campaign.campaign_id);
+      if (response.ok) {
+        // Poll for updates as the backend processes
+        pollCampaignStatus(campaign.campaign_id);
+      }
     } catch (error) {
       console.warn('Backend approve call failed:', error);
+      // If backend is down, complete locally for demo mode
+      if (regen.length === 0) {
+        handleCompleteCampaign();
+      }
     }
   };
 
-  const handleCompleteCampaign = () => {
+  const handleCompleteCampaign = async () => {
     if (!campaign) return;
 
+    // The workflow was already resumed by handleSubmitApprovals.
+    // "Complete Campaign" only needs to poll for the backend to finish
+    // execution + persistence.  Do NOT send another /approve POST.
+    try {
+      const response = await fetch(`${API_BASE}/api/v1/campaigns/${campaign.campaign_id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setCampaign(data);
+        // If not yet completed, start polling
+        if (data.status !== 'completed' && data.status !== 'failed') {
+          pollCampaignStatus(campaign.campaign_id);
+          return;
+        }
+        // Already completed by backend
+        loadSessions();
+        return;
+      }
+    } catch (error) {
+      console.warn('Backend status check failed, completing locally:', error);
+    }
+
+    // Fallback: complete locally for demo mode
     const updatedDrafts = campaign.drafts.map(d => 
       d.approved ? { ...d, sent: true } : d
     );
@@ -864,19 +877,27 @@ function App() {
     setTextInput('');
     setFile(null);
     setApprovalChoices({});
+    // Keep activeSessionId – no need to create a new session
   };
 
   const hasApprovedDrafts = campaign?.drafts.some(d => d.approved);
   
-  // Smart detection: show approval UI if drafts have scores but aren't approved yet
-  const needsApproval = campaign && campaign.drafts.length > 0 
-    && campaign.drafts.every(d => d.score !== null && d.score !== undefined)
-    && !hasApprovedDrafts
+  // Total expected channels
+  const EXPECTED_DRAFT_COUNT = 5;
+  
+  // Drafts that still need a user decision
+  const pendingDrafts = campaign?.drafts.filter(d => !d.approved && !d.sent) || [];
+  
+  // Show approval UI only after ALL drafts are generated
+  const allDraftsReady = campaign && campaign.drafts.length >= EXPECTED_DRAFT_COUNT;
+  
+  const needsApproval = campaign && allDraftsReady
+    && pendingDrafts.length > 0
     && campaign.status !== 'completed';
   
   const showApprovalUI = campaign && (
-    campaign.current_stage === 'approval' 
-    || campaign.status === 'approval'
+    (campaign.current_stage === 'approval' && allDraftsReady)
+    || (campaign.status === 'approval' && allDraftsReady)
     || needsApproval
   );
 
@@ -1050,18 +1071,22 @@ John Smith is a Senior Software Engineer at TechCorp Inc with 8 years of experie
                     <div className="approval-actions-container">
                       <div className="approval-summary">
                         <p>
-                          {Object.keys(approvalChoices).length === 0 
-                            ? "Select action for each draft above (Approve, Regenerate, or Skip)"
-                            : `Selected: ${Object.keys(approvalChoices).length} draft(s)`}
+                          {pendingDrafts.length === 0
+                            ? "All drafts approved! Click Complete Campaign to proceed."
+                            : Object.keys(approvalChoices).length === 0 
+                              ? `Select action for each draft above (${pendingDrafts.length} pending)`
+                              : Object.keys(approvalChoices).length < pendingDrafts.length
+                                ? `Selected: ${Object.keys(approvalChoices).length} of ${pendingDrafts.length} — choose action for all drafts to continue`
+                                : `All ${Object.keys(approvalChoices).length} choices ready to submit`}
                         </p>
                       </div>
                       
                       <div className="approval-actions">
-                        {Object.keys(approvalChoices).length > 0 ? (
+                        {Object.keys(approvalChoices).length === pendingDrafts.length && pendingDrafts.length > 0 ? (
                           <button className="submit-btn primary-action" onClick={handleSubmitApprovals}>
-                            ✓ Submit {Object.keys(approvalChoices).length} Choice(s) →
+                            ✓ Submit All {Object.keys(approvalChoices).length} Choice(s) →
                           </button>
-                        ) : hasApprovedDrafts ? (
+                        ) : hasApprovedDrafts && pendingDrafts.length === 0 ? (
                           <button className="complete-btn primary-action" onClick={handleCompleteCampaign}>
                             🚀 Complete Campaign
                           </button>

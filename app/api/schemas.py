@@ -74,6 +74,9 @@ class PersonaResponse(BaseModel):
     industry: str | None = None
     seniority: str | None = None
     communication_style: str | None = None
+    formality_level: str | None = None
+    tone_keywords: list[str] = []
+    language_hints: str | None = None
     key_interests: list[str] = []
     pain_points: list[str] = []
     decision_factors: list[str] = []

@@ -67,8 +67,11 @@ def _build_campaign_response(campaign: dict, campaign_id: str) -> CampaignRespon
     
     drafts_data = state.get("drafts", [])
     llm_actions_data = state.get("llm_actions", [])
-    stages_data = state.get("stages", [])
     tone = state.get("tone", {})
+    
+    # Build stages from the top-level campaign stages dict
+    # (update_stage() writes here, NOT to state["stages"])
+    campaign_stages = campaign.get("stages", {})
     
     # Build drafts response
     drafts = [
@@ -107,28 +110,39 @@ def _build_campaign_response(campaign: dict, campaign_id: str) -> CampaignRespon
         for a in llm_actions_data
     ]
     
-    # Build stages response
-    stages = [
-        StageInfoResponse(
-            name=s.get("name", ""),
-            started_at=s.get("started_at"),
-            completed_at=s.get("completed_at"),
-            duration_ms=s.get("duration_ms"),
-            status=s.get("status", "pending")
+    # Build stages response from the top-level stages dict
+    stages = []
+    for stage_cfg in [
+        "ingestion", "persona", "drafting", "approval",
+        "execution", "persistence",
+    ]:
+        sd = campaign_stages.get(stage_cfg, {})
+        ts = sd.get("timestamp")
+        started_str = ts.isoformat() + "Z" if hasattr(ts, 'isoformat') else str(ts) if ts else None
+        completed_str = started_str if sd.get("status") == "completed" else None
+        stages.append(
+            StageInfoResponse(
+                name=stage_cfg,
+                started_at=started_str if sd.get("status") in ("running", "completed", "waiting") else None,
+                completed_at=completed_str,
+                duration_ms=None,
+                status=sd.get("status", "pending"),
+            )
         )
-        for s in stages_data
-    ]
     
     # Build persona response from tone data
     persona = None
     if tone:
         persona = PersonaResponse(
-            name=tone.get("name"),
+            name=tone.get("name") or state.get("target_name"),
             company=state.get("company"),
             role=state.get("role"),
             industry=state.get("industry"),
             seniority=tone.get("seniority"),
             communication_style=tone.get("communication_style"),
+            formality_level=tone.get("formality_level"),
+            tone_keywords=tone.get("tone_keywords", []),
+            language_hints=tone.get("language_hints"),
             key_interests=tone.get("interests", []),
             recommended_approach=tone.get("recommended_approach"),
         )
@@ -238,10 +252,12 @@ async def create_campaign(
 @app.post("/api/v1/campaigns/upload")
 async def upload_file(
     file: UploadFile = File(...),
+    session_id: str | None = None,
     background_tasks: BackgroundTasks = None
 ):
     """
     Upload a PDF or DOC file and start a campaign.
+    Accepts an optional session_id query parameter.
     """
     try:
         # Validate file type
@@ -259,12 +275,13 @@ async def upload_file(
         
         logger.info(f"Uploaded file: {file_path}")
         
-        # Create campaign with file path
+        # Create campaign with file path (use existing session if provided)
         campaign_id = state_manager.create_campaign(
             input_data={
                 "type": "file",
                 "content": str(file_path)
-            }
+            },
+            session_id=session_id
         )
         
         # Start workflow in background

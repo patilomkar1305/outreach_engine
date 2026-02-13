@@ -43,8 +43,10 @@ def _get_llm() -> OllamaLLM:
         _llm = OllamaLLM(
             model=settings.ollama.model,
             base_url=settings.ollama.base_url,
-            temperature=0.2,            # low – we want analytical, not creative here
-            num_predict=1024,
+            temperature=0.1,            # very low – analytical, not creative
+            num_predict=1200,            # enough room for detailed persona
+            top_p=0.9,
+            repeat_penalty=1.1,
         )
         logger.info("Persona LLM initialised: model=%s", settings.ollama.model)
     return _llm
@@ -61,11 +63,15 @@ derive a detailed tone & style profile. Your output MUST be valid JSON
 with EXACTLY these keys – no extra text before or after the JSON block:
 
 {{
+  "name": "<the person's full name as found in the profile>",
+  "company": "<the company or organisation they work at>",
+  "role": "<their full job title, e.g. VP of Engineering>",
+  "industry": "<one-word industry tag: tech, finance, health, education, marketing, design, or other>",
   "formality_level": "<casual | semi-formal | formal>",
   "communication_style": "<2-3 sentence description of how this person writes/communicates>",
   "language_hints": "<specific quirks: emoji use, abbreviations, sentence length, punctuation habits>",
   "interests": ["<interest1>", "<interest2>", ...],
-  "recent_activity_summary": "<1-2 sentence summary of what they have been doing lately – no names or emails>",
+  "recent_activity_summary": "<1-2 sentence summary of what they have been doing lately – no emails>",
   "tone_keywords": ["<word1>", "<word2>", ...]
 }}
 
@@ -76,6 +82,7 @@ with EXACTLY these keys – no extra text before or after the JSON block:
 {profile_text}
 
 ─── INSTRUCTIONS ───
+• Extract the person's full name from the profile and put it in the "name" field.
 • Analyse word choice, sentence structure, punctuation and emoji usage.
 • If the text is short, make reasonable inferences from the role + industry.
 • Keep recent_activity_summary factual and PII-free (no full names or emails).
@@ -130,7 +137,27 @@ def _extract_json(raw: str) -> dict[str, Any]:
             if depth == 0:
                 end = i + 1
                 break
-    return json.loads(cleaned[start:end])
+
+    json_str = cleaned[start:end]
+
+    # First try as-is
+    try:
+        return json.loads(json_str)
+    except json.JSONDecodeError:
+        pass
+
+    # LLM sometimes truncates output — try appending missing closing braces
+    # Find the full tail after start, which may include unclosed content
+    tail = cleaned[start:]
+    open_braces = tail.count("{") - tail.count("}")
+    if open_braces > 0:
+        repaired = tail.rstrip().rstrip(",") + ("]" if tail.rstrip().endswith('"') and '[' in tail else "") + "}" * open_braces
+        try:
+            return json.loads(repaired)
+        except json.JSONDecodeError:
+            pass
+
+    raise ValueError(f"Could not parse persona JSON: {json_str[:200]}")
 
 
 # ---------------------------------------------------------------------------
@@ -148,8 +175,9 @@ def persona_node(state: OutreachState) -> OutreachState:
         logger.warning("No raw_profile_text – persona analysis will be shallow.")
 
     # ── 1. Pull similar personas from vector DB ─────────────────────
-    # We use company + role + industry as a rough query string
-    query_str = " ".join(filter(None, [
+    # Use the actual profile text for semantic similarity (much better than keywords)
+    profile_snippet = profile_text[:500] if profile_text else ""
+    query_str = profile_snippet if profile_snippet else " ".join(filter(None, [
         state.get("company", ""),
         state.get("role", ""),
         state.get("industry", ""),
@@ -204,10 +232,22 @@ def persona_node(state: OutreachState) -> OutreachState:
     # ── 5. Update state & DELETE ephemeral raw text ──────────────────
     # Complete stage tracking
     state = complete_stage(state, "persona")
+
+    # If persona extracted a name, prefer it over ingestion's extraction
+    extracted_name = tone_json.get("name", "") or state.get("target_name", "")
+    
+    # If ingestion couldn't find company/role/industry, use LLM's extraction
+    extracted_company = state.get("company", "") or tone_json.get("company", "")
+    extracted_role    = state.get("role", "")    or tone_json.get("role", "")
+    extracted_industry = state.get("industry", "") or tone_json.get("industry", "")
     
     updated: OutreachState = {
         **state,
         "tone":              tone_json,
+        "target_name":       extracted_name,
+        "company":           extracted_company,
+        "role":              extracted_role,
+        "industry":          extracted_industry,
         "similar_personas":  similar,
         "status":            "persona_done",
         # ── EPHEMERAL CLEANUP ──

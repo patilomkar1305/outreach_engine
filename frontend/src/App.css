@@ -526,6 +526,16 @@ body {
   font-weight: 500;
 }
 
+.interest-tag.tone-tag {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+
+.formality-badge {
+  text-transform: capitalize;
+  font-weight: 600;
+}
+
 /* ─── PIPELINE PROGRESS ────────────────────────────────────────────────────── */
 .pipeline-progress {
   display: flex;
@@ -631,6 +641,7 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 20px;
+  align-items: stretch;
 }
 
 /* ─── DRAFT CARD ───────────────────────────────────────────────────────────── */
@@ -643,6 +654,7 @@ body {
   display: flex;
   flex-direction: column;
   transition: all var(--transition-fast);
+  min-height: 280px;
 }
 
 .draft-card:hover {
@@ -838,6 +850,16 @@ body {
   padding: 12px;
   background: rgba(16, 185, 129, 0.1);
   color: var(--secondary-dark);
+  border-radius: var(--radius-md);
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.approved-indicator {
+  padding: 12px;
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--primary);
   border-radius: var(--radius-md);
   text-align: center;
   font-weight: 600;

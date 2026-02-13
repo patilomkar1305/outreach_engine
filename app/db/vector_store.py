@@ -140,6 +140,71 @@ def upsert_persona(
 
 
 # ---------------------------------------------------------------------------
+# Draft storage  –  approved outreach drafts for future reference
+# ---------------------------------------------------------------------------
+
+def _get_drafts_collection() -> chromadb.Collection:
+    """Get (or create) the drafts collection."""
+    client = _get_chroma_client()
+    return client.get_or_create_collection(
+        name=f"{settings.chroma.collection}_drafts",
+        metadata={"hnsw:space": "cosine"},
+    )
+
+
+def upsert_drafts(
+    target_hash: str,
+    drafts: list[dict[str, Any]],
+    metadata_base: dict[str, str] | None = None,
+) -> None:
+    """
+    Store approved drafts in ChromaDB so they can be retrieved for
+    future outreach quality comparison and style reference.
+
+    Each draft is stored as a separate document with channel-specific ID.
+    """
+    collection = _get_drafts_collection()
+    embed_model = _get_embed_model()
+    meta_base = metadata_base or {}
+
+    ids: list[str] = []
+    embeddings: list[list[float]] = []
+    documents: list[str] = []
+    metadatas: list[dict[str, str]] = []
+
+    for d in drafts:
+        channel = d.get("channel", "unknown")
+        body = d.get("body", "")
+        subject = d.get("subject", "") or ""
+        if not body:
+            continue
+
+        doc_text = f"[{channel}] {subject}\n{body}" if subject else f"[{channel}]\n{body}"
+        doc_id = f"{target_hash}_{channel}"
+
+        ids.append(doc_id)
+        embeddings.append(embed_model.encode(doc_text).tolist())
+        documents.append(doc_text)
+        metadatas.append({
+            **meta_base,
+            "channel": channel,
+            "approved": str(d.get("approved", False)),
+            "sent": str(d.get("sent", False)),
+        })
+
+    if ids:
+        collection.upsert(
+            ids=ids,
+            embeddings=embeddings,
+            documents=documents,
+            metadatas=metadatas,
+        )
+        logger.info("Upserted %d drafts for target_hash=%s", len(ids), target_hash)
+    else:
+        logger.warning("No drafts to store for target_hash=%s", target_hash)
+
+
+# ---------------------------------------------------------------------------
 # Knowledge Base Functions
 # ---------------------------------------------------------------------------
 

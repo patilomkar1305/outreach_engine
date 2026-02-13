@@ -105,6 +105,7 @@ class OutreachState(TypedDict, total=False):
     target_hash: str            # SHA-256 of target_identifier
 
     # ── public business info ────────────────────────────────────────────
+    target_name: str            # extracted person name (e.g. "Sarah Chen")
     company: str
     role: str
     industry: str
@@ -120,7 +121,9 @@ class OutreachState(TypedDict, total=False):
 
     # ── approval (human-in-the-loop) ─────────────────────────────────────
     approved_channels: list[str]  # channels the user approved
+    regen_channels: list[str]     # channels the user wants regenerated
     pending_approval: list[str]   # channels awaiting approval
+    regen_count: int              # number of regen rounds so far
 
     # ── execution results ────────────────────────────────────────────────
     execution_results: Annotated[list[dict[str, Any]], add]  # append-only

@@ -126,35 +126,102 @@ def _extract_links(raw: str) -> dict[str, str]:
     return link_map
 
 
-def _guess_company_role(text: str) -> tuple[str, str, str]:
+def _extract_name(text: str) -> str:
     """
-    Very lightweight extraction of company / role / industry from text.
+    Extract the person's full name from the profile text.
+    Looks for common patterns like the very first line being a name,
+    or "Name: X" patterns.
+    """
+    lines = [line.strip() for line in text.strip().splitlines() if line.strip()]
+    if not lines:
+        return ""
+
+    # Pattern 1: First line is often the name (Title Case, 2-4 words, no special chars)
+    first_line = lines[0].strip()
+    # Remove common prefixes
+    for prefix in ["Name:", "Full Name:", "Profile:"]:
+        if first_line.lower().startswith(prefix.lower()):
+            first_line = first_line[len(prefix):].strip()
+            break
+
+    # Check if first line looks like a name (2-4 Title Case words, letters/hyphens only)
+    name_match = re.match(r'^([A-Z][a-z]+(?:[\s\-][A-Z][a-z]+){0,3})$', first_line)
+    if name_match:
+        return name_match.group(1)
+
+    # Pattern 2: Look for "I'm <Name>" or "My name is <Name>"
+    im_match = re.search(r"(?:I'm|I am|My name is|Hi,? I'm)\s+([A-Z][a-z]+(?:\s[A-Z][a-z]+){0,2})", text)
+    if im_match:
+        return im_match.group(1)
+
+    # Pattern 3: Look for a Title-Case name near role/title keywords
+    # e.g. "Sarah Chen, VP of Engineering" or "Sarah Chen - VP"
+    name_role_match = re.search(
+        r'([A-Z][a-z]+(?:\s[A-Z][a-z]+){0,2})\s*[,\-–|]\s*(?:CEO|CTO|VP|Director|Manager|Engineer|Founder|Head|Chief|President|Lead)',
+        text
+    )
+    if name_role_match:
+        return name_role_match.group(1)
+
+    # Pattern 4: First line might be name even without strict regex
+    # Check if it's short (< 40 chars) and doesn't look like a sentence
+    if len(first_line) < 40 and not any(c in first_line for c in '.!?:@#$%'):
+        words = first_line.split()
+        if 1 < len(words) <= 4 and all(w[0].isupper() for w in words if w):
+            return first_line
+
+    return ""
+
+
+def _extract_full_role(text: str) -> str:
+    """
+    Extract the full job title (e.g. 'VP of Engineering') not just 'VP'.
+    """
+    # Pattern: "<Title> of/at/for <Dept>" or "<Title>, <Company>"
+    role_patterns = [
+        r'((?:Chief|Senior|Junior|Lead|Staff|Principal|Head)?\s*(?:VP|Vice President|Director|Manager|Engineer|Founder|Co-Founder|CEO|CTO|CFO|COO|CMO|CIO|CISO)\s*(?:of\s+[A-Za-z\s&]+?)?(?=\s*(?:at|@|,|\||\n|$)))',
+        r'((?:Senior|Junior|Lead|Staff|Principal)?\s*(?:Software|Data|Product|Project|Marketing|Sales|DevOps|Platform|Cloud|Full[- ]?Stack|Backend|Frontend|Solutions|Systems)\s*(?:Engineer|Developer|Architect|Scientist|Analyst|Manager|Designer|Consultant))',
+    ]
+    for pattern in role_patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+    return ""
+
+
+def _guess_company_role(text: str) -> tuple[str, str, str, str]:
+    """
+    Very lightweight extraction of company / role / industry / name from text.
     In a production system you'd run a dedicated NER model here.
-    Returns (company, role, industry) – any can be empty string.
+    Returns (company, role, industry, name) – any can be empty string.
     """
     company = role = industry = ""
+    name = _extract_name(text)
 
-    # Role heuristics
-    role_titles = [
-        "CEO", "CTO", "VP", "Director", "Manager", "Engineer",
-        "Founder", "Co-Founder", "Product Manager", "Designer",
-        "Developer", "Data Scientist", "Analyst", "Consultant",
-    ]
-    text_lower = text.lower()
-    for title in role_titles:
-        if title.lower() in text_lower:
-            role = title
-            break
+    # Role heuristics - try full role first, then fall back to simple title
+    role = _extract_full_role(text)
+    if not role:
+        role_titles = [
+            "CEO", "CTO", "VP of Engineering", "VP", "Director", "Manager", "Engineer",
+            "Founder", "Co-Founder", "Product Manager", "Designer",
+            "Developer", "Data Scientist", "Analyst", "Consultant",
+        ]
+        text_lower = text.lower()
+        for title in role_titles:
+            if title.lower() in text_lower:
+                role = title
+                break
 
     # Industry keywords (expand as needed)
     industries = {
-        "tech": ["software", "saas", "ai", "machine learning", "cloud", "cybersecurity"],
+        "tech": ["software", "saas", "ai", "machine learning", "cloud", "cybersecurity", "kubernetes", "devops", "infrastructure"],
         "finance": ["fintech", "banking", "investment", "crypto", "insurance"],
         "health": ["healthtech", "biotech", "pharma", "medical", "wellness"],
         "education": ["edtech", "education", "learning", "university"],
         "marketing": ["marketing", "advertising", "brand", "growth"],
         "design": ["design", "ux", "ui", "product design"],
     }
+    text_lower = text.lower()
     for ind, keywords in industries.items():
         if any(kw in text_lower for kw in keywords):
             industry = ind
@@ -165,7 +232,7 @@ def _guess_company_role(text: str) -> tuple[str, str, str]:
     if at_match:
         company = at_match.group(1).strip()
 
-    return company, role, industry
+    return company, role, industry, name
 
 
 # ---------------------------------------------------------------------------
@@ -216,7 +283,7 @@ def ingestion_node(state: OutreachState) -> OutreachState:
     combined_text = "\n".join(extracted_texts)
 
     # ── 2. Guess structured fields ────────────────────────────────────
-    company, role, industry = _guess_company_role(combined_text)
+    company, role, industry, name = _guess_company_role(combined_text)
 
     # ── 3. Compute opaque hash ────────────────────────────────────────
     # Use the first URL if available, else the whole raw input
@@ -232,6 +299,7 @@ def ingestion_node(state: OutreachState) -> OutreachState:
         "target_identifier": identifier,
         "target_hash":       target_hash,
         "raw_profile_text":  combined_text,
+        "target_name":       name,
         "company":           company,
         "role":              role,
         "industry":          industry,
@@ -240,7 +308,7 @@ def ingestion_node(state: OutreachState) -> OutreachState:
     }
 
     logger.info(
-        "Ingestion done | company=%s role=%s industry=%s links=%s hash=%s…",
-        company, role, industry, list(all_links.keys()), target_hash[:12],
+        "Ingestion done | name=%s company=%s role=%s industry=%s links=%s hash=%s…",
+        name, company, role, industry, list(all_links.keys()), target_hash[:12],
     )
     return updated
