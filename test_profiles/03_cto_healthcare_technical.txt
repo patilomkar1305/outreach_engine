@@ -1,0 +1,36 @@
+Dr. Priya Malhotra, PhD
+Chief Technology Officer at MedLink Health Systems
+Boston, MA | Healthcare Technology
+
+ABOUT ME
+I lead technology strategy and engineering at MedLink, where we're building HIPAA-compliant infrastructure for interconnected healthcare systems. My background is in distributed systems, cryptography, and healthcare informatics.
+
+PhD in Computer Science from MIT (thesis on privacy-preserving medical data exchange). Previously led platform engineering at Epic Systems and spent time at the Broad Institute working on genomic data pipelines.
+
+EXPERIENCE
+• CTO, MedLink Health Systems (2021-Present)
+  Leading 120-person engineering org, overseeing architecture for 500+ hospital network
+  Built FHIR-compliant API serving 15M patient records
+  
+• VP Engineering, Epic Systems (2017-2021)
+  Led interoperability team, implemented HL7/FHIR standards
+  
+• Research Scientist, Broad Institute of MIT & Harvard (2014-2017)
+  Developed secure computation protocols for genomic research
+
+INTERESTS & EXPERTISE
+• Healthcare data interoperability (FHIR, HL7, DICOM)
+• Privacy-preserving computation & federated learning
+• Cloud infrastructure (AWS, GCP) with healthcare compliance
+• Clinical decision support systems
+• Machine learning for diagnostic imaging
+• Zero-trust security architecture
+
+PERSONAL
+I publish regularly in academic journals and speak at conferences like HIMSS and IEEE. Active contributor to open-source healthcare projects. Outside work, I mentor women in tech and volunteer with Code.org.
+
+RECENT ACTIVITY
+Currently standardizing our microservices architecture and evaluating new encryption methodologies for patient data. Published a paper on federated learning in healthcare at NeurIPS. Recruiting senior backend engineers with healthcare domain expertise.
+
+COMMUNICATION STYLE
+I appreciate technical depth and precision. If you're pitching a solution, I need to understand the architecture, security model, and compliance approach. No hand-waving – show me the technical documentation, reference implementations, and performance benchmarks.

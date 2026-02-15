@@ -1,0 +1,36 @@
+Raj Krishnan
+Senior Machine Learning Engineer at DataWorks AI
+Bangalore, India | Artificial Intelligence / ML Platform
+
+ABOUT ME
+I build production ML systems that actually work at scale. At DataWorks, I'm part of the ML platform team – we provide the infrastructure that powers recommendation engines, fraud detection, and predictive analytics for our enterprise clients.
+
+MS in Computer Science from IIT Delhi, specializing in deep learning and natural language processing. I'm a regular contributor to TensorFlow and PyTorch, and I've published several papers on distributed training and model optimization.
+
+EXPERIENCE
+• Senior ML Engineer, DataWorks AI (2021-Present)
+  Building horizontally scalable ML platform serving 200+ models in production
+  Reduced model training time by 60% through distributed training optimizations
+  
+• ML Engineer, Flipkart (2018-2021)
+  Built recommendation and search ranking systems processing 100M+ daily requests
+  
+• Research Intern, Google Brain (Summer 2017)
+  Worked on neural architecture search and AutoML
+
+INTERESTS & EXPERTISE
+• Deep learning (CNNs, Transformers, LLMs)
+• MLOps & model deployment (Kubeflow, MLflow, SageMaker)
+• Distributed training & model parallelism
+• Feature engineering & data pipelines (Spark, Airflow)
+• Model monitoring & observability
+• Python, PyTorch, TensorFlow, JAX
+
+PERSONAL
+Very active in the ML community – I write technical blog posts on Medium, contribute to open-source projects, and mentor through MLH. I'm on Twitter/X sharing research papers and discussing ML trends. Also love cricket and playing CTF challenges.
+
+RECENT ACTIVITY
+Currently fine-tuning LLMs for domain-specific applications and exploring prompt engineering techniques. Just published a blog post on efficient inference optimization. Looking into vector databases for RAG applications. Experimenting with quantization and model compression.
+
+COMMUNICATION STYLE
+I'm friendly but I appreciate technical substance. If you're reaching out about an ML tool or platform, show me the technical docs, GitHub repo, or live demo. I want to understand the architecture, performance benchmarks, and how it integrates with our stack (we're heavily Python/PyTorch-based). Happy to chat on LinkedIn, email, or even Twitter DMs if it's something technically interesting!

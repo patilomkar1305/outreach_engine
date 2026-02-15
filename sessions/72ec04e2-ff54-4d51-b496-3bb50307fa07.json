@@ -1,0 +1,320 @@
+{
+  "session_id": "72ec04e2-ff54-4d51-b496-3bb50307fa07",
+  "name": "Session 1",
+  "created_at": "2026-02-14T17:45:28.955128Z",
+  "updated_at": "2026-02-14T17:52:33.578961Z",
+  "campaigns": [
+    {
+      "id": "9992d3e6-23e5-4fe8-a0da-d5e066ca7d39",
+      "session_id": "72ec04e2-ff54-4d51-b496-3bb50307fa07",
+      "status": "completed",
+      "current_stage": "persistence",
+      "input": {
+        "type": "file",
+        "content": "uploads\\test2.pdf"
+      },
+      "state": {
+        "llm_actions": [
+          {
+            "id": "74b410b0-d223-4112-a921-e6640a0a13f7",
+            "timestamp": "2026-02-14T17:47:07.556962Z",
+            "stage": "persona",
+            "agent": "persona_agent",
+            "action": "Analyzing profile to extract communication style and persona",
+            "model": "llama3:8b",
+            "prompt_preview": "You are an expert communication-style analyst.\n\nGiven the following publicly available profile text about a professional,\nderive a detailed tone & style profile. Your output MUST be valid JSON\nwith EX...",
+            "response_preview": "{\n  \"name\": \"Jasmine Rodriguez\",\n  \"company\": \"FreshThreads\",\n  \"role\": \"Chief Marketing Officer\",\n  \"industry\": \"Fashion & Retail\",\n  \"formality_level\": \"semi-formal\",\n  \"communication_style\": \"I'm a...",
+            "tokens_used": null,
+            "duration_ms": 90679,
+            "status": "success",
+            "error_message": null
+          },
+          {
+            "id": "22eddfb0-ceab-49bc-9151-85a7bfcff356",
+            "timestamp": "2026-02-14T17:48:26.836118Z",
+            "stage": "drafting",
+            "agent": "draft_email_agent",
+            "action": "Generating EMAIL message draft",
+            "model": "llama3:8b",
+            "prompt_preview": "You are a world-class cold-outreach copywriter who writes emails that feel like they were hand-crafted by a thoughtful human.\nWrite a cold EMAIL to Jasmine Rodriguez, a CMO at FreshThreads  \nLos Angel...",
+            "response_preview": "Here is the cold email:\n\n{\n\"subject\": \"\ud83d\udd25 FreshThreads x TikTok: Your Brand's Next Move? \ud83d\udd25\",\n\"body\": \nJasmine, \n\nI just saw that you recently wrapped a campaign with Emma Chamberlain - huge congrats on...",
+            "tokens_used": null,
+            "duration_ms": 77169,
+            "status": "success",
+            "error_message": null
+          },
+          {
+            "id": "4b28b8ba-20fe-4775-aa3b-e89ff1de42c9",
+            "timestamp": "2026-02-14T17:49:14.017883Z",
+            "stage": "drafting",
+            "agent": "draft_whatsapp_agent",
+            "action": "Generating WHATSAPP message draft",
+            "model": "llama3:8b",
+            "prompt_preview": "You are a friendly, natural WhatsApp message writer who sounds like a real person reaching out genuinely.\nWrite a cold WhatsApp message to Jasmine Rodriguez, a CMO at FreshThreads  \nLos Angeles.\n\n\u2500\u2500\u2500 ...",
+            "response_preview": "Here is the cold WhatsApp message:\n\n{\n\"body\": \"Hey Jasmine, hope you're crushing it after that Emma Chamberlain campaign! I've been following FreshThreads' journey and love what you guys are doing aro...",
+            "tokens_used": null,
+            "duration_ms": 124338,
+            "status": "success",
+            "error_message": null
+          },
+          {
+            "id": "117a88e2-af43-49ec-87f1-47553a9d5445",
+            "timestamp": "2026-02-14T17:49:59.043051Z",
+            "stage": "drafting",
+            "agent": "draft_sms_agent",
+            "action": "Generating SMS message draft",
+            "model": "llama3:8b",
+            "prompt_preview": "You are a concise, friendly SMS copywriter who writes texts that feel personal, not automated.\nWrite a cold SMS to Jasmine Rodriguez, a CMO at FreshThreads  \nLos Angeles.\n\n\u2500\u2500\u2500 TONE PROFILE \u2500\u2500\u2500\n{\n  \"na...",
+            "response_preview": "Here is the cold SMS:\n\n{\n\"body\": \"Hey Jasmine! \ud83e\udd29 I came across FreshThreads' collab with Emma Chamberlain - loved it! Would love to explore how we can bring that same energy to your brand. Want to gra...",
+            "tokens_used": null,
+            "duration_ms": 169369,
+            "status": "success",
+            "error_message": null
+          },
+          {
+            "id": "6a8506f9-eeef-42db-b6ac-aa8a26bb8609",
+            "timestamp": "2026-02-14T17:50:47.675519Z",
+            "stage": "drafting",
+            "agent": "draft_instagram_agent",
+            "action": "Generating INSTAGRAM message draft",
+            "model": "llama3:8b",
+            "prompt_preview": "You are a casual, engaging Instagram DM writer who sounds like a real person, not a brand.\nWrite a cold Instagram DM to Jasmine Rodriguez, a CMO at FreshThreads  \nLos Angeles.\n\n\u2500\u2500\u2500 TONE PROFILE \u2500\u2500\u2500\n{\n...",
+            "response_preview": "Here is the cold Instagram DM to Jasmine Rodriguez:\n\n```\n{\n  \"body\": \"Hey Jasmine, \ud83e\udd29 I just saw your campaign with Emma Chamberlain and it's SO cool! Love how you're pushing boundaries in sustainable ...",
+            "tokens_used": null,
+            "duration_ms": 218004,
+            "status": "success",
+            "error_message": null
+          },
+          {
+            "id": "678450b1-27a0-4d83-89b4-0ad8f0ebc39e",
+            "timestamp": "2026-02-14T17:51:55.669019Z",
+            "stage": "drafting",
+            "agent": "draft_linkedin_agent",
+            "action": "Generating LINKEDIN message draft",
+            "model": "llama3:8b",
+            "prompt_preview": "You are a LinkedIn DM expert who writes thoughtful, engaging connection messages.\nWrite a cold LinkedIn DM to Jasmine Rodriguez, a CMO at FreshThreads  \nLos Angeles.\n\n\u2500\u2500\u2500 TONE PROFILE \u2500\u2500\u2500\n{\n  \"name\": ...",
+            "response_preview": "Here is the cold LinkedIn DM:\n\n{\n\"body\": \"Hey Jasmine! \ud83d\ude4c I came across your recent campaign with Emma Chamberlain and was impressed by how seamlessly you blended FreshThreads' style with her creative ...",
+            "tokens_used": null,
+            "duration_ms": 285993,
+            "status": "success",
+            "error_message": null
+          }
+        ],
+        "stages": [
+          {
+            "name": "ingestion",
+            "started_at": "2026-02-14T17:45:29.085403Z",
+            "completed_at": "2026-02-14T17:45:29.256995Z",
+            "duration_ms": 171,
+            "status": "completed"
+          },
+          {
+            "name": "persona",
+            "started_at": "2026-02-14T17:45:29.269097Z",
+            "completed_at": "2026-02-14T17:47:07.556962Z",
+            "duration_ms": 98287,
+            "status": "completed"
+          }
+        ],
+        "drafts": [
+          {
+            "id": "ad983a88-5ad2-49a7-9246-d2f27bb6fe6b",
+            "channel": "email",
+            "subject": "\ud83d\udd25 FreshThreads x TikTok: Your Brand's Next Move? \ud83d\udd25",
+            "body": "Jasmine, \n\nI just saw that you recently wrapped a campaign with Emma Chamberlain - huge congrats on that! I'm loving the way FreshThreads is killing it in the influencer space.\n\nAs someone who keeps an eye on TikTok virality and creator economy, I noticed your brand's unique blend of fashion and community-driven building really resonates. Your Venice Beach retail launch is going to be a game-changer!\n\nWhat got me thinking was that our work at [My Company] often intersects with the sustainable fashion and ethical supply chain conversations you're passionate about. We've been experimenting with social-first creative strategies for brands like yours, focusing on user-generated content and community engagement.\n\nIf you're open to exploring new ideas or just want to chat about your recent campaign, I'd love to grab a quick call (no sales pitch, promise!). Just hit reply whenever you're free.\nCheers,",
+            "score": null,
+            "score_rationale": null,
+            "approved": true,
+            "sent": true,
+            "version": 1,
+            "regenerate_count": 0,
+            "created_at": "2026-02-14T17:48:26.836118Z",
+            "llm_action_id": "22eddfb0-ceab-49bc-9151-85a7bfcff356"
+          },
+          {
+            "id": "45dd943f-c17d-4e85-b4bd-0da73561a7e8",
+            "channel": "whatsapp",
+            "subject": null,
+            "body": "Hey Jasmine, hope you're crushing it after that Emma Chamberlain campaign! I've been following FreshThreads' journey and love what you guys are doing around sustainable fashion. Would be great to grab a quick call or chat about creative ways to drive engagement on TikTok - would love your thoughts!",
+            "score": null,
+            "score_rationale": null,
+            "approved": true,
+            "sent": true,
+            "version": 1,
+            "regenerate_count": 0,
+            "created_at": "2026-02-14T17:49:14.017883Z",
+            "llm_action_id": "4b28b8ba-20fe-4775-aa3b-e89ff1de42c9"
+          },
+          {
+            "id": "e8b45116-047c-461a-9168-801075c55b5f",
+            "channel": "sms",
+            "subject": null,
+            "body": "Hey Jasmine! \ud83e\udd29 I came across FreshThreads' collab with Emma Chamberlain - loved it! Would love to explore how we can bring that same energy to your brand. Want to grab a quick call to discuss?",
+            "score": null,
+            "score_rationale": null,
+            "approved": true,
+            "sent": true,
+            "version": 1,
+            "regenerate_count": 0,
+            "created_at": "2026-02-14T17:49:59.044562Z",
+            "llm_action_id": "117a88e2-af43-49ec-87f1-47553a9d5445"
+          },
+          {
+            "id": "ee9c7651-2ecb-4eed-9c95-5802e0750dc4",
+            "channel": "instagram",
+            "subject": null,
+            "body": "Hey Jasmine, \ud83e\udd29 I just saw your campaign with Emma Chamberlain and it's SO cool! Love how you're pushing boundaries in sustainable fashion. Would love to hear more about what inspired this collab. Let me know if you're open to swapping stories or even sharing some behind-the-scenes fun \ud83d\ude04",
+            "score": null,
+            "score_rationale": null,
+            "approved": true,
+            "sent": true,
+            "version": 1,
+            "regenerate_count": 0,
+            "created_at": "2026-02-14T17:50:47.675519Z",
+            "llm_action_id": "6a8506f9-eeef-42db-b6ac-aa8a26bb8609"
+          },
+          {
+            "id": "682e228e-3d97-4313-beba-1b48c78a7349",
+            "channel": "linkedin",
+            "subject": null,
+            "body": "Hey Jasmine! \ud83d\ude4c I came across your recent campaign with Emma Chamberlain and was impressed by how seamlessly you blended FreshThreads' style with her creative energy. Your brand's ability to adapt and innovate in the ever-changing fashion landscape is truly inspiring!\n\nAs someone who has been following sustainable fashion trends, I'm intrigued by FreshThreads' commitment to ethical supply chains. What drives your approach to sustainability, and are there any specific initiatives or partnerships that you're particularly proud of?\n\nI'd love to explore more about how Fashion & Retail companies like yours are leveraging user-generated content (UGC) to drive brand engagement. Would you be open to discussing some potential UGC strategies for FreshThreads? I've had success with similar approaches in my own work and would enjoy sharing some insights.\n\nLet me know if any of these topics spark your interest, or we can simply grab a virtual coffee chat to discuss the state of Fashion & Retail marketing. Looking forward to hearing from you!",
+            "score": null,
+            "score_rationale": null,
+            "approved": true,
+            "sent": true,
+            "version": 1,
+            "regenerate_count": 0,
+            "created_at": "2026-02-14T17:51:55.669019Z",
+            "llm_action_id": "678450b1-27a0-4d83-89b4-0ad8f0ebc39e"
+          }
+        ],
+        "raw_input": "",
+        "execution_results": [
+          {
+            "status": "sent",
+            "to": "patilomkar2580@gmail.com",
+            "subject": "\ud83d\udd25 FreshThreads x TikTok: Your Brand's Next Move? \ud83d\udd25",
+            "message_id": "Message sent. Message Id: 19c5d48665b2eac6",
+            "channel": "email"
+          },
+          {
+            "status": "mock_sent",
+            "channel": "whatsapp",
+            "to": "+10000000000"
+          },
+          {
+            "status": "sent",
+            "sid": "SM7d1c687cabc16b168582837f09c761f9",
+            "to": "+919309843992",
+            "channel": "sms"
+          },
+          {
+            "status": "mock_sent",
+            "channel": "instagram",
+            "to": "@target"
+          },
+          {
+            "status": "mock_sent",
+            "channel": "linkedin",
+            "to": "linkedin.com/in/target"
+          }
+        ],
+        "updated_at": "2026-02-14T17:47:07.556962Z",
+        "target_identifier": "uploads\\test2.pdf",
+        "target_hash": "f2403425e38c9180f827585dbeecee0198584c8dcf36ba04c85c46a93ebec31a",
+        "raw_profile_text": "",
+        "target_name": "Jasmine Rodriguez",
+        "company": "FreshThreads  \nLos Angeles",
+        "role": "CMO",
+        "industry": "tech",
+        "links": {},
+        "status": "completed",
+        "tone": {
+          "name": "Jasmine Rodriguez",
+          "company": "FreshThreads",
+          "role": "Chief Marketing Officer",
+          "industry": "Fashion & Retail",
+          "formality_level": "semi-formal",
+          "communication_style": "I'm all about keeping it real. I hate corporate speak and formal emails put me to sleep. Talk to me like a human. Show me something creative, unexpected, or genuinely useful. Bonus points for good memes and authentic energy.",
+          "language_hints": "casual tone, frequent use of emojis (e.g., \ud83d\udc4b, \ud83d\udc15, \u2615), informal sentence structure, liberal use of colloquialisms (e.g., 'keep it real', 'don't judge!')",
+          "interests": [
+            "TikTok virality",
+            "Influencer partnerships & creator economy",
+            "Sustainable fashion & ethical supply chains",
+            "Community-driven brand building",
+            "UGC content strategy & social-first creative"
+          ],
+          "recent_activity_summary": "Recently wrapped a campaign with Emma Chamberlain and preparing to launch a physical retail space in Venice Beach.",
+          "tone_keywords": [
+            "casual",
+            "real",
+            "human",
+            "creative",
+            "unexpected",
+            "genuine",
+            "authentic"
+          ]
+        },
+        "similar_personas": [
+          {
+            "tone_summary": "name=Sarah Chen | role=VP of Engineering | company=CloudScale Technologies \nSan Fr | formality=semi-formal | style=I keep things casual and straightforward. No corporate jargon - I prefer real conversations over polished pitches. Always happy to grab coffee with fellow engineers or collaborate on interesting problems. | interests=Distributed systems architecture, Kubernetes & cloud-native technologies, Platform engineering & developer experience, Engineering leadership & team building, Open source contribution | keywords=casual, straightforward, real, conversational, inclusive",
+            "industry": "tech",
+            "similarity": 0.225
+          }
+        ],
+        "approved_channels": [
+          "email",
+          "whatsapp",
+          "sms",
+          "instagram",
+          "linkedin"
+        ],
+        "regen_channels": [],
+        "__resume__": {
+          "approved": [
+            "email",
+            "whatsapp",
+            "sms",
+            "instagram",
+            "linkedin"
+          ],
+          "regen": []
+        }
+      },
+      "created_at": "2026-02-14T17:45:28.955128Z",
+      "updated_at": "2026-02-14T17:52:33.578961Z",
+      "stages": {
+        "ingestion": {
+          "status": "completed",
+          "message": "Ingestion completed",
+          "timestamp": "2026-02-14 17:45:29.267044"
+        },
+        "persona": {
+          "status": "completed",
+          "message": "Persona completed",
+          "timestamp": "2026-02-14 17:47:07.565382"
+        },
+        "drafting": {
+          "status": "completed",
+          "message": "Drafting completed",
+          "timestamp": "2026-02-14 17:51:55.686662"
+        },
+        "approval": {
+          "status": "completed",
+          "message": "Approval completed",
+          "timestamp": "2026-02-14 17:52:20.528703"
+        },
+        "execution": {
+          "status": "completed",
+          "message": "Execution completed",
+          "timestamp": "2026-02-14 17:52:32.903480"
+        },
+        "persistence": {
+          "status": "completed",
+          "message": "Campaign completed successfully",
+          "timestamp": "2026-02-14 17:52:33.576924"
+        }
+      }
+    }
+  ]
+}

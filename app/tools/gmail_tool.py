@@ -50,6 +50,7 @@ def _init_gmail() -> Any:
     
     api_resource = build_resource_service(credentials=credentials)
     _gmail_send_tool = GmailSendMessage(api_resource=api_resource)
+    return _gmail_send_tool
 # ---------------------------------------------------------------------------
 
 def send_gmail(to: str, subject: str, body: str) -> dict[str, Any]:

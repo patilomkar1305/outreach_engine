@@ -1,0 +1,36 @@
+Marcus Blackwell
+Principal Security Consultant at CyberShield Advisory
+London, UK | Cybersecurity Consulting
+
+ABOUT ME
+I help enterprises secure their infrastructure against evolving threats. 15+ years in offensive security, penetration testing, and security architecture. CISSP, OSCP, and CEH certified with hands-on experience across finance, healthcare, and critical infrastructure sectors.
+
+Before consulting, I spent time in government cybersecurity roles (details limited due to NDAs). Now I split my time between client engagements, security research, and speaking at conferences like Black Hat and DEF CON.
+
+EXPERIENCE
+• Principal Security Consultant, CyberShield Advisory (2020-Present)
+  Leading security assessments and incident response for enterprise clients
+  Conducted 40+ penetration tests, 15+ red team engagements
+  
+• Senior Security Engineer, Undisclosed Government Agency (2014-2020)
+  [Details restricted]
+  
+• Security Researcher, Independent (2010-2014)
+  Published CVEs, contributed to open-source security tools
+
+INTERESTS & EXPERTISE
+• Penetration testing & ethical hacking
+• Zero-day vulnerability research
+• Cloud security (AWS, Azure, GCP)
+• Security architecture & threat modeling
+• Incident response & digital forensics
+• Compliance frameworks (SOC 2, ISO 27001, NIST)
+
+PERSONAL
+I maintain a low public profile but am active in security communities under various handles. I contribute to open-source security projects and occasionally publish research papers. Outside of security, I'm into rock climbing and chess.
+
+RECENT ACTIVITY
+Currently focused on cloud-native security challenges – seeing a lot of misconfigurations in Kubernetes and serverless deployments. Just wrapped a major incident response engagement for a fintech client. Researching supply chain attacks and SBOMs.
+
+COMMUNICATION STYLE
+Be direct and technically competent. I don't have patience for security vendors who lead with fear-mongering or buzzwords. If you're reaching out, understand my domain, reference specific challenges I care about, and demonstrate technical credibility. Technical white papers > marketing decks.

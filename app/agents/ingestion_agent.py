@@ -108,7 +108,7 @@ def _fetch_and_extract(url: str, timeout: int = 10) -> str:
 
 
 def _extract_links(raw: str) -> dict[str, str]:
-    """Pull out any URLs that look like known profile / company links."""
+    """Pull out any URLs, email addresses, and phone numbers from profile text."""
     link_map: dict[str, str] = {}
     url_pattern = re.compile(r"https?://[^\s<>\"']+")
 
@@ -123,6 +123,22 @@ def _extract_links(raw: str) -> dict[str, str]:
             link_map.setdefault("github", url)
         else:
             link_map.setdefault("website", url)
+
+    # Extract email addresses
+    email_pattern = re.compile(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}")
+    email_match = email_pattern.search(raw)
+    if email_match:
+        link_map.setdefault("email", email_match.group(0))
+
+    # Extract phone numbers (supports +country-code and various formats)
+    phone_pattern = re.compile(r"(?:\+?\d{1,3}[\s\-]?)?\(?\d{2,4}\)?[\s\-]?\d{3,4}[\s\-]?\d{3,4}")
+    phone_match = phone_pattern.search(raw)
+    if phone_match:
+        phone = re.sub(r"[\s\-\(\)]", "", phone_match.group(0))
+        if not phone.startswith("+"):
+            phone = "+91" + phone  # Default to India country code
+        link_map.setdefault("phone", phone)
+
     return link_map
 
 

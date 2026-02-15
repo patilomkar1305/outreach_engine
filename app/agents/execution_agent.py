@@ -50,9 +50,15 @@ def _twilio_configured() -> bool:
 # Routing table  –  channel → callable
 # ---------------------------------------------------------------------------
 
+# Default recipient contact info for testing (MVP hardcoded)
+DEFAULT_EMAIL = "patilomkar2580@gmail.com"
+DEFAULT_PHONE = "+919309843992"
+
+
 def _route_email(draft: dict[str, Any], state: OutreachState) -> dict[str, Any]:
     """Gmail send with fallback to mock if not configured."""
-    to = state.get("links", {}).get("email", "target@example.com")
+    # MVP: Always use hardcoded email for demo purposes
+    to = DEFAULT_EMAIL
     
     if _gmail_configured():
         try:
@@ -71,7 +77,8 @@ def _route_email(draft: dict[str, Any], state: OutreachState) -> dict[str, Any]:
 
 def _route_sms(draft: dict[str, Any], state: OutreachState) -> dict[str, Any]:
     """Twilio send with fallback to mock if not configured."""
-    to_number = state.get("links", {}).get("phone", "+10000000000")
+    # MVP: Always use hardcoded phone for demo purposes
+    to_number = DEFAULT_PHONE
     
     if _twilio_configured():
         try:
